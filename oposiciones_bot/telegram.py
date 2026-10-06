@@ -145,9 +145,12 @@ def render_event(event: dict[str, Any]) -> str:
             f"💻 <b>Puesto:</b> {_e_limited(candidate.title, 700)}",
         ]
     )
-    location = " · ".join(part for part in (candidate.locality, candidate.province, candidate.scope) if part)
-    if location:
-        lines.append(f"📍 <b>Ámbito:</b> {_e_limited(location, 400)}")
+    lines.extend([
+        f"🏘 <b>Municipio:</b> {_e_limited(candidate.locality or 'No confirmado', 200)}",
+        f"📍 <b>Provincia:</b> {_e_limited(candidate.province or 'No confirmada', 200)}",
+        f"🌐 <b>Ámbito:</b> {_e_limited(candidate.scope or 'No confirmado', 200)}",
+        "Destino concreto: comprobar en las bases; el ámbito no garantiza destino.",
+    ])
     qualification = candidate.qualification_text or "No confirmada automáticamente"
     lines.extend(
         [

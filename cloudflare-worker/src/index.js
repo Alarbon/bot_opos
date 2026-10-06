@@ -113,7 +113,7 @@ function listProcesses(data, followedOnly = false, page = 1) {
   if (!Number.isInteger(page) || page < 1 || page > pages) throw new Error(`Página inválida. Hay ${pages} página(s).`);
   const labels = { OPEN: "✅ Plazo y perfil confirmados", REVIEW: "🔎 Por revisar; inscripción no confirmada", TRACKING: "📌 Proceso avanzado o cerrado; no es una nueva inscripción" };
   return [followedOnly ? "📌 Tus seguimientos" : "📋 Convocatorias informáticas", `Datos consultados: ${data.generated_at}`, `Página ${page}/${pages}. Actualiza con /buscar.`, "",
-    ...(items.length ? items.slice((page - 1) * 10, page * 10).map(p => `${p.id.slice(0, 8)} — ${p.title}\n${labels[p.category] || "Por revisar"}${p.followed ? " · Siguiendo" : ""}\n${p.organisation}\n/detalle ${p.id.slice(0, 8)}`) : ["No hay procesos registrados en esta lista."]),
+    ...(items.length ? items.slice((page - 1) * 10, page * 10).map(p => `${p.id.slice(0, 8)} — ${p.title}\n${labels[p.category] || "Por revisar"}${p.followed ? " · Siguiendo" : ""}\n${p.organisation}\nMunicipio: ${p.locality || "No confirmado"}\nProvincia: ${p.province || "No confirmada"}\nÁmbito: ${p.scope || "No confirmado"}\n/detalle ${p.id.slice(0, 8)}`) : ["No hay procesos registrados en esta lista."]),
     "", `Más páginas: /${followedOnly ? "seguimientos" : "convocatorias"} N`, "Para recibir cambios: /seguir ID. Para quitar: /dejar ID.",
     ...(data.sources?.some(s => s.status === "ERROR") ? ["⚠️ Algunas fuentes fallaron en la última consulta; cobertura incompleta."] : []),
   ].join("\n\n");
@@ -124,7 +124,7 @@ function processDetail(p, data) {
   const labels = { OPEN: "✅ Oportunidad con plazo y perfil confirmados", REVIEW: "🔎 POR REVISAR — no confirma que puedas inscribirte", TRACKING: "📌 PROCESO AVANZADO O CERRADO — no es una nueva inscripción" };
   const links = [...(p.links || [])];
   if (p.url && !links.some(l => l.url === p.url)) links.unshift({ label: "Fuente principal", url: p.url });
-  return [labels[p.category], `ID: ${p.id.slice(0, 8)}`, `Puesto: ${p.title}`, `Organismo: ${p.organisation}`, `Ámbito: ${[p.locality, p.province, p.scope].filter(Boolean).join(" · ") || "No confirmado"}`,
+  return [labels[p.category], `ID: ${p.id.slice(0, 8)}`, `Puesto: ${p.title}`, `Organismo: ${p.organisation}`, `Municipio: ${value(p.locality)}`, `Provincia: ${value(p.province)}`, `Ámbito: ${value(p.scope)}`, "Destino concreto: comprobar en las bases; el ámbito no garantiza destino.",
     `Grupo: ${value(p.group)}`, `Plazas: ${value(p.positions)}`, `Acceso: ${value(p.access)}`, `Titulación: ${value(p.qualification_text)}`, `Compatibilidad: ${value(p.compatibility)}`,
     ...(p.review_reason ? [`Pendiente: ${p.review_reason}`] : []), `Estado: ${p.status}`, `Publicación: ${value(p.publication_date)}`, `Fin de solicitudes: ${value(p.deadline)} (${p.deadline_confirmed ? "fecha confirmada" : "sin confirmar"})`,
     `Examen: ${value(p.exam_date)} · Hora: ${value(p.exam_time)} · Lugar: ${value(p.exam_place)}`, `Resumen: ${value(p.summary)}`,

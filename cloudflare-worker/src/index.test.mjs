@@ -82,6 +82,10 @@ for (const command of ["/convocatorias", "/detalle", "/detalle aaaaaaaa", "/deta
       await pending;
       assert.equal(messages.length, 1);
       assert.ok(!messages[0].startsWith("❌"));
+      if (!command.startsWith("/seguir ") && !command.startsWith("/dejar ")) {
+        assert.ok(messages[0].includes("Municipio: No confirmado"));
+        assert.ok(messages[0].includes("Provincia: No confirmada") || messages[0].includes("Provincia: No confirmado"));
+      }
       assert.equal(dispatches.length, command.startsWith("/seguir ") || command.startsWith("/dejar ") ? 1 : 0);
       if (dispatches.length) assert.equal(dispatches[0].inputs.process_id, process.id);
     } finally { globalThis.fetch = originalFetch; }
