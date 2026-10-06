@@ -162,7 +162,7 @@ async function latestStatus(env) {
     `Origen: ${run.event === "schedule" ? "automática programada" : run.event === "workflow_dispatch" ? "manual" : run.event}`,
     `Inicio: ${localDate(run.run_started_at || run.created_at)} (hora peninsular)`,
     ...(run.status === "completed" ? [`Fin registrado por GitHub: ${localDate(run.updated_at)}`] : []),
-    "Horario: 08:30, 12:30, 17:30 y 20:30 · Europe/Madrid.",
+    "Horario: 08:30, 12:30, 17:30 y 21:00 · Europe/Madrid.",
   ];
   try {
     const summaryResponse = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(env.GITHUB_REF || "main")}/data/latest_run.json`, { cache: "no-store" });

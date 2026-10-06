@@ -656,7 +656,7 @@ remotos: si cambió la base, catálogo o informe, se detiene para revisión. Los
 workflows de búsqueda y seguimiento conservan su bloqueo compartido.
 
 Las búsquedas automáticas se programan todos los días a las **08:30, 12:30,
-17:30 y 20:30** en `Europe/Madrid` (España peninsular), tanto en verano como
+17:30 y 21:00** en `Europe/Madrid` (España peninsular), tanto en verano como
 en invierno. GitHub Actions puede iniciar una ejecución con retraso.
 
 La búsqueda es incremental por fuente: desde la fecha de su última consulta
