@@ -72,7 +72,7 @@ async function dispatchSearch(env) {
     },
     body: JSON.stringify({ ref, inputs: { dry_run: false } }),
   });
-  if (response.status !== 204) {
+  if (response.status !== 200 && response.status !== 204) {
     const detail = await response.text();
     throw new Error(`GitHub no inicio el workflow (${response.status}): ${detail.slice(0, 300)}`);
   }
