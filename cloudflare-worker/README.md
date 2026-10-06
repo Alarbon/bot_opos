@@ -30,7 +30,7 @@ Secretos que deben configurarse en Cloudflare, nunca en Git:
 
 El endpoint de salud es `/health` y el webhook es `/telegram`.
 
-Después de publicar el Worker hay que registrar en Telegram la URL
-`https://NOMBRE.workers.dev/telegram` mediante `setWebhook`, incluyendo el mismo
-`WEBHOOK_SECRET` en el parámetro `secret_token`. Los comandos visibles se pueden
-configurar sin API desde BotFather con `/setcommands`.
+Después de publicar el Worker, una petición `POST` a `/admin/configure` con la
+cabecera `Authorization: Bearer <WEBHOOK_SECRET>` registra automáticamente el
+webhook y los comandos visibles en Telegram. La ruta está protegida por el mismo
+secreto y no devuelve ninguna credencial.

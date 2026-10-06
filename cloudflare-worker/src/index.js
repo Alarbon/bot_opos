@@ -36,6 +36,24 @@ async function reply(env, chatId, text) {
   });
 }
 
+async function configureTelegram(request, env) {
+  const webhookSecret = required(env, "WEBHOOK_SECRET");
+  const origin = new URL(request.url).origin;
+
+  await telegram(env, "setWebhook", {
+    url: `${origin}/telegram`,
+    secret_token: webhookSecret,
+    allowed_updates: ["message", "edited_message"],
+  });
+  await telegram(env, "setMyCommands", {
+    commands: [
+      { command: "buscar", description: "Iniciar una búsqueda ahora" },
+      { command: "estado", description: "Consultar la última ejecución" },
+      { command: "ayuda", description: "Mostrar la ayuda" },
+    ],
+  });
+}
+
 async function dispatchSearch(env) {
   const owner = String(env.GITHUB_OWNER || "Alarbon").trim();
   const repo = String(env.GITHUB_REPO || "bot_opos").trim();
@@ -145,6 +163,21 @@ export default {
     if (request.method === "GET" && url.pathname === "/health") {
       return textResponse("ok");
     }
+
+    if (request.method === "POST" && url.pathname === "/admin/configure") {
+      const expectedSecret = required(env, "WEBHOOK_SECRET");
+      const receivedSecret = request.headers.get("authorization") || "";
+      if (receivedSecret !== `Bearer ${expectedSecret}`) return textResponse("forbidden", 403);
+
+      try {
+        await configureTelegram(request, env);
+        return textResponse("configured");
+      } catch (error) {
+        console.error("configuration failed", error);
+        return textResponse("configuration failed", 502);
+      }
+    }
+
     if (url.pathname !== "/telegram") return textResponse("not found", 404);
     if (request.method !== "POST") return textResponse("method not allowed", 405);
 
