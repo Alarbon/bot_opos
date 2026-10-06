@@ -148,7 +148,7 @@ def _run(args: argparse.Namespace) -> int:
                 "Faltan TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID; los avisos quedan PENDING"
             )
             return 0 if not args.dispatch_only else 2
-        sent = dispatch(store=store, telegram=telegram, limit=args.limit)
+        sent = dispatch(store=store, telegram=telegram, limit=args.limit, config=config)
         LOGGER.info(
             "Outbox reclamados=%s enviados=%s reintentables=%s inciertos=%s",
             sent.claimed,
@@ -199,7 +199,7 @@ def _outbox(args: argparse.Namespace) -> int:
                 )
                 LOGGER.error("Faltan TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID")
                 return 2
-            result = dispatch(store=store, telegram=telegram, event_ids=ids)
+            result = dispatch(store=store, telegram=telegram, event_ids=ids, config=config)
             print(
                 f"Enviados={result.sent} reintentables={result.retryable} inciertos={result.uncertain}"
             )

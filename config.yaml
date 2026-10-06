@@ -1,5 +1,12 @@
 timezone: Europe/Madrid
 
+eligibility:
+  require_it_qualification: true
+  require_it_role_in_title: true
+  allowed_groups: [B, C1]
+  require_confirmed_qualification: true
+  only_enrollable_new: true
+
 locations:
   priority:
     - Martos
@@ -49,6 +56,12 @@ special_processes:
   junta_informatica: true
 
 sources:
+  sas:
+    enabled: true
+    kind: html
+    urls:
+      - "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/profesionales/ofertas-de-empleo/provision-temporal-de-puestos-base-cargos-intermedios-y-puestos-directivos/ooe"
+      - "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/profesionales/ofertas-de-empleo/oferta-de-empleo-publico-puestos-base/convocatorias-oep-2025/cuadro-de-evolucion/tecnicoa-especialista-en-informatica"
   boe:
     enabled: true
     kind: boe_api

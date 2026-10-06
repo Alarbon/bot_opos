@@ -614,3 +614,23 @@ volumen lo justifique.
 - Un resultado `REVISAR` exige abrir el enlace y comprobar las bases oficiales.
 - Antes de actualizar dependencias o parsers, conserva una copia de
   `data/oposiciones.db` y ejecuta `python main.py db check`.
+# Perfil personal de avisos
+
+El perfil configurado ahora exige puestos informáticos (técnico, auxiliar,
+especialista y equivalentes), grupo B o C1 confirmado y una titulación admitida
+de DAM, DAW, ASIR o la familia profesional de Informática y Comunicaciones.
+No basta con que el anuncio mencione herramientas informáticas o Bachiller.
+Las bases siguen siendo la autoridad: pertenecer a una familia no garantiza
+que cualquier título concreto sea admitido.
+
+Las nuevas oportunidades requieren acceso libre/mixto y fecha límite oficial
+confirmada, no vencida. Anuncios de notas, exámenes o admitidos no son nuevas
+oportunidades. Se mantienen actualizaciones de procesos ya registrados que
+siguen cumpliendo el perfil; el bot no sabe si te has inscrito realmente.
+Los avisos pendientes antiguos se revisan otra vez antes de enviarlos.
+
+SAS: se consulta el tablón de ofertas específicas y la página de evolución de
+Técnico Especialista en Informática de OEP 2025, además del BOJA. No es una
+garantía de cobertura exhaustiva de todos los centros o páginas paginadas.
+Con estos filtros conservadores puede omitirse una convocatoria cuyo grupo,
+titulación o plazo no puedan extraerse automáticamente.

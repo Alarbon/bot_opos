@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import logging
+import json
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any
 
-from .classifiers import evaluate_candidate
+from .classifiers import can_apply, evaluate_candidate
 from .config import AppConfig
 from .db import SQLiteStore
 from .http import HttpClient
-from .models import OutboxStatus
+from .models import Candidate, EventKind, OutboxStatus
 from .sources.base import FetchContext, SourceAdapter
 from .telegram import (
     TelegramAmbiguousError,
@@ -88,6 +89,10 @@ def collect(
             for candidate in candidates:
                 decision = evaluate_candidate(candidate, config)
                 already_tracked = store.has_candidate(candidate)
+                if config.get("eligibility.only_enrollable_new", False):
+                    if not already_tracked and not can_apply(candidate, today):
+                        summary.filtered += 1
+                        continue
                 if not decision.include and not already_tracked:
                     summary.filtered += 1
                     LOGGER.debug("Descartada %s: %s", candidate.source_id, decision.reason)
@@ -103,6 +108,8 @@ def collect(
                 notify = not first_run or _should_notify_on_bootstrap(
                     candidate, today, bootstrap_days
                 )
+                if config.get("eligibility.only_enrollable_new", False):
+                    notify = notify and decision.include
                 result = store.ingest(candidate, decision, notify=notify)
                 if result.action == "created":
                     summary.created += 1
@@ -144,6 +151,7 @@ def dispatch(
     telegram: TelegramClient,
     event_ids: list[str] | None = None,
     limit: int = 20,
+    config: AppConfig | None = None,
 ) -> DispatchSummary:
     if event_ids is None:
         event_ids = store.claim_outbox(limit=limit)
@@ -155,6 +163,16 @@ def dispatch(
                 "Se omite %s porque su estado es %s", event["event_id"], event["status"]
             )
             continue
+        if config and config.get("eligibility.only_enrollable_new", False):
+            candidate = Candidate.from_dict(json.loads(event["payload_json"])["candidate"])
+            eligible = evaluate_candidate(candidate, config).include
+            if event["kind"] in {EventKind.NEW.value, EventKind.REVIEW.value, EventKind.REMINDER.value}:
+                from zoneinfo import ZoneInfo
+                from datetime import datetime
+                eligible = eligible and can_apply(candidate, datetime.now(ZoneInfo(config.get("timezone", "Europe/Madrid"))).date())
+            if not eligible:
+                store.mark_event(event["event_id"], OutboxStatus.SUPPRESSED, error="Fuera del perfil personal o sin plazo de inscripcion confirmado")
+                continue
         try:
             message_id = telegram.send(render_event(event))
         except TelegramAmbiguousError as exc:

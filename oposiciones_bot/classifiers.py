@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from dataclasses import dataclass
 
 from .config import AppConfig
@@ -11,6 +12,8 @@ from .normalization import normalize_text
 STRONG_IT_TERMS = (
     "tecnico auxiliar de informatica",
     "tecnico informatico",
+    "tecnico especialista en informatica",
+    "tecnico especialista informatica",
     "tecnica informatica",
     "auxiliar de informatica",
     "auxiliar informatico",
@@ -138,6 +141,11 @@ def is_junta_it(candidate: Candidate) -> bool:
 def classify_relevance(candidate: Candidate) -> bool:
     text = normalize_text(candidate.searchable_text)
     position = _position_text(candidate)
+    # A qualification or application portal is not the advertised job.
+    role = normalize_text(candidate.title)
+    if any(term in role for term in ("administrativo", "gestion administrativa", "gestion de funcion administrativa")):
+        if not any(term in role for term in ("opcion informatica", "especialidad informatica", "sistemas informaticos")):
+            return False
     if is_tai(position) or is_junta_it(candidate):
         return True
     strong = any(term in position for term in STRONG_IT_TERMS)
@@ -269,7 +277,7 @@ def infer_status(text: str) -> ProcessStatus:
         (("suspension", "suspendido", "suspendida"), ProcessStatus.SUSPENDED),
         (("reapertura", "nuevo plazo"), ProcessStatus.REOPENED),
         (("eleccion de destinos", "destinos adjudicados"), ProcessStatus.DESTINATIONS),
-        (("calificaciones", "relacion de aprobados", "notas definitivas"), ProcessStatus.MARKS),
+        (("calificaciones", "relacion de aprobados", "notas definitivas", "notas segundo examen", "notas del segundo", "notas primer examen"), ProcessStatus.MARKS),
         (
             (
                 "fecha de examen",
@@ -339,7 +347,8 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
         allow_standalone=bool(candidate.qualification_text),
     )
     candidate.compatibility = Compatibility(evidence.value)
-    candidate.status = infer_status(text)
+    milestone_text = " ".join([text, *(link.label.replace("_", " ") for link in candidate.links)])
+    candidate.status = infer_status(milestone_text)
     geo = geographic_match(candidate, config)
     candidate.priority = calculate_priority(candidate, config)
 
@@ -350,6 +359,39 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
         and candidate.access is not AccessType.INTERNAL_ONLY
     )
     reasons = []
+    if config.get("eligibility.require_it_qualification", False):
+        qualification = normalize_text(candidate.qualification_text)
+        family_terms = (
+            "desarrollo de aplicaciones multiplataforma",
+            "desarrollo de aplicaciones web",
+            "administracion de sistemas informaticos en red",
+            "administracion de sistemas informaticos",
+            "desarrollo de aplicaciones informaticas",
+            "familia profesional informatica",
+            "familia profesional de informatica",
+            "familia de informatica",
+            "rama informatica",
+        )
+        family_confirmed = any(term in qualification for term in family_terms) or bool(re.search(r"\b(?:dam|daw|asir)\b", qualification))
+        if not family_confirmed:
+            include = False
+            reasons.append("las bases no confirman DAM/DAW/ASIR o familia informatica")
+    if config.get("eligibility.require_it_role_in_title", False):
+        role = normalize_text(candidate.title)
+        it_role = bool(re.search(
+            r"\b(?:tecnic[oa](?: a)?|auxiliar|ayudante|operador|programador|analista|administrador|soporte|desarrollador)\b.*\b(?:informatic[oa]s?|sistemas|tic|software|aplicaciones)\b",
+            role,
+        )) or is_tai(role)
+        if not it_role:
+            include = False
+            reasons.append("el titulo no identifica un puesto informatico del perfil")
+    allowed_groups = config.get("eligibility.allowed_groups", [])
+    if allowed_groups and candidate.group.upper().strip() not in allowed_groups:
+        include = False
+        reasons.append("grupo no permitido o no confirmado (solo B/C1)")
+    if config.get("eligibility.require_confirmed_qualification", False) and candidate.compatibility is not Compatibility.COMPATIBLE:
+        include = False
+        reasons.append("titulacion compatible no confirmada")
     if not relevant:
         reasons.append("sin senal suficiente de puesto informatico")
     if not geo:
@@ -367,3 +409,21 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
         access=candidate.access,
         priority=candidate.priority,
     )
+
+
+def can_apply(candidate: Candidate, today: date) -> bool:
+    """Never turn an exam/marks notice into a new enrolment opportunity."""
+    if candidate.status not in {ProcessStatus.OPEN, ProcessStatus.REOPENED, ProcessStatus.ANNOUNCED, ProcessStatus.DETECTED}:
+        return False
+    if candidate.access not in {AccessType.OPEN, AccessType.MIXED}:
+        return False
+    if not candidate.deadline_confirmed or not candidate.deadline:
+        return False
+    try:
+        if date.fromisoformat(candidate.deadline) < today:
+            return False
+        if candidate.publication_date and date.fromisoformat(candidate.publication_date) > today:
+            return False
+    except ValueError:
+        return False
+    return True
