@@ -29,6 +29,14 @@ def main():
             print("Error de conexion:", type(exc).__name__, str(exc))
         print()
 
+    archive = session.get(
+        "https://bophistorico.dipujaen.es/results.vm",
+        params={"c": "1", "f": "", "l": "15", "lang": "es", "o": "", "p": "0", "s": "0", "t": "-creation", "view": "boletin", "w": "informatica"},
+        timeout=40,
+    )
+    print(f"Archivo oficial HTTP: {archive.status_code}; Bytes: {len(archive.content)}")
+    print(f"Resultados enlazados: {len(set(re.findall(r'viewer\\.vm\\?id=([0-9]+)', archive.text)))}")
+
 
 if __name__ == "__main__":
     main()
