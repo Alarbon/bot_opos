@@ -71,7 +71,7 @@ class AyuntamientoJaenSource(SourceAdapter):
             )
             if published:
                 age = (context.today - date.fromisoformat(published)).days
-                if age < 0 or age > context.lookback_days:
+                if age < 0 or (age > context.lookback_days and item_id not in context.followed_source_ids):
                     continue
             title = clean_text(str(item.get("descriptionProc") or ""))
             reference = clean_text(str(item.get("externString") or ""))

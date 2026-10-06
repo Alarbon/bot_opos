@@ -75,14 +75,22 @@ def collect(
     lookback = int(config.get("collection.lookback_days", 10))
     bootstrap_days = int(config.get("collection.bootstrap_notify_days", 14))
     for adapter, source_config in sources:
+        source_lookback = lookback
+        if config.get("collection.incremental", False):
+            checkpoint = store.collection_checkpoint(adapter.name, str(config.get("timezone", "Europe/Madrid")))
+            if checkpoint is not None:
+                overlap = max(0, int(config.get("collection.incremental_overlap_days", 0)))
+                source_lookback = max(0, (today - checkpoint).days) + overlap
+        LOGGER.info("%s: ventana de consulta %s a %s (ambos incluidos)", adapter.name, today - timedelta(days=source_lookback), today)
         run_id = store.start_source_run(adapter.name)
         source_included = 0
         try:
             context = FetchContext(
                 today=today,
-                lookback_days=lookback,
+                lookback_days=source_lookback,
                 source_config=source_config,
                 app_config=config,
+                followed_source_ids=store.followed_source_ids(adapter.name),
             )
             candidates = adapter.fetch(context)
             summary.fetched += len(candidates)
@@ -131,6 +139,7 @@ def collect(
                 status="OK",
                 found=len(candidates),
                 included=source_included,
+                covered_through=today,
             )
         except Exception as exc:
             message = f"{exc.__class__.__name__}: {exc}"

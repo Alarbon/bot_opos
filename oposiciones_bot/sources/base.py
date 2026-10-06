@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 import re
 from typing import Any
@@ -18,6 +18,7 @@ class FetchContext:
     lookback_days: int
     source_config: dict[str, Any]
     app_config: AppConfig
+    followed_source_ids: set[str] = field(default_factory=set)
 
 
 class SourceAdapter(ABC):

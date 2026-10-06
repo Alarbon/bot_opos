@@ -31,6 +31,8 @@ locations:
   radius_from_martos_km: 40
 
 collection:
+  incremental: true
+  incremental_overlap_days: 0
   lookback_days: 10
   bootstrap_notify_days: 14
   fetch_document_text: true

@@ -59,7 +59,7 @@ class DiputacionJaenSource(SourceAdapter):
                     "fechaInicio",
                 )
             )
-            if published and (context.today - date.fromisoformat(published)).days > context.lookback_days:
+            if item_id not in context.followed_source_ids and published and (context.today - date.fromisoformat(published)).days > context.lookback_days:
                 continue
             detail: dict[str, Any] = {}
             try:

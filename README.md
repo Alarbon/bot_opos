@@ -638,6 +638,15 @@ de B/C1, exigencia universitaria y puestos no informáticos siguen excluidos.
 
 ## Consulta y seguimiento desde Telegram
 
+La búsqueda es incremental por fuente: desde la fecha de su última consulta
+correcta hasta hoy, incluyendo ambos días. Una consulta fallida no avanza el
+punto de control. La primera consulta usa los 10 días configurados. Las
+consultas manuales y programadas comparten esos puntos de control. Los
+tablones sin archivo histórico solo permiten revisar lo que aún publican;
+una ventana de fechas no garantiza recuperar documentos retirados.
+Los registros seguidos en los tablones de Jaén se revisan aunque su fecha
+original sea anterior a la ventana. Los avisos repetidos siguen deduplicados.
+
 - `/buscar`: actualizar fuentes en GitHub; al acabar usa `/convocatorias`.
 - `/convocatorias N`: lista paginada de oportunidades, revisión y seguimiento.
 - `/detalle ID` o `/buscar ID`: ficha disponible, enlaces e historial detectado.

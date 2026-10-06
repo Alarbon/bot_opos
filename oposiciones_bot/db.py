@@ -36,7 +36,7 @@ from .normalization import (
 )
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 SCHEMA = """
@@ -149,6 +149,10 @@ CREATE INDEX IF NOT EXISTS idx_source_runs_name ON source_runs(source, started_a
 CREATE TABLE IF NOT EXISTS followed_processes (
     process_id TEXT PRIMARY KEY REFERENCES processes(id) ON DELETE CASCADE,
     followed_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS source_checkpoints (
+    source TEXT PRIMARY KEY,
+    covered_through TEXT NOT NULL
 );
 """
 
@@ -286,6 +290,24 @@ class SQLiteStore:
             with self.connection:
                 self.connection.execute("CREATE TABLE IF NOT EXISTS followed_processes (process_id TEXT PRIMARY KEY REFERENCES processes(id) ON DELETE CASCADE, followed_at TEXT NOT NULL)")
                 self.connection.execute("PRAGMA user_version=4")
+        if version < 5:
+            with self.connection:
+                self.connection.execute("CREATE TABLE IF NOT EXISTS source_checkpoints (source TEXT PRIMARY KEY, covered_through TEXT NOT NULL)")
+                self.connection.execute("PRAGMA user_version=5")
+
+    def collection_checkpoint(self, source: str, timezone_name: str = "Europe/Madrid") -> date | None:
+        row = self.connection.execute("SELECT covered_through FROM source_checkpoints WHERE source=?", (source,)).fetchone()
+        if row:
+            return date.fromisoformat(row["covered_through"])
+        # Existing installations already recorded successful source consultations.
+        row = self.connection.execute("SELECT finished_at FROM source_runs WHERE source=? AND status='OK' AND finished_at IS NOT NULL ORDER BY id DESC LIMIT 1", (source,)).fetchone()
+        if row:
+            from zoneinfo import ZoneInfo
+            return datetime.fromisoformat(row["finished_at"]).astimezone(ZoneInfo(timezone_name)).date()
+        return None
+
+    def followed_source_ids(self, source: str) -> set[str]:
+        return {row["external_id"] for row in self.connection.execute("SELECT s.external_id FROM source_items s JOIN followed_processes f ON f.process_id=s.process_id WHERE s.source=?", (source,))}
 
     def is_followed(self, process_id: str) -> bool:
         return bool(self.connection.execute("SELECT 1 FROM followed_processes WHERE process_id=?", (process_id,)).fetchone())
@@ -344,6 +366,7 @@ class SQLiteStore:
         included: int = 0,
         error: str | None = None,
         now: str | None = None,
+        covered_through: date | None = None,
     ) -> None:
         with self.connection:
             self.connection.execute(
@@ -354,6 +377,9 @@ class SQLiteStore:
                 """,
                 (now or utc_now_iso(), status, found, included, (error or "")[:2000], run_id),
             )
+            if status == "OK" and covered_through is not None:
+                source = self.connection.execute("SELECT source FROM source_runs WHERE id=?", (run_id,)).fetchone()["source"]
+                self.connection.execute("INSERT INTO source_checkpoints VALUES (?,?) ON CONFLICT(source) DO UPDATE SET covered_through=MAX(covered_through,excluded.covered_through)", (source, covered_through.isoformat()))
 
     def _resolve_process(self, db: sqlite3.Connection, candidate: Candidate) -> sqlite3.Row | None:
         row = db.execute(
