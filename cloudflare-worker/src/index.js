@@ -59,6 +59,10 @@ function bopResponse(body, status, contentType = "text/plain; charset=utf-8") {
   });
 }
 
+function bopDependencyError(code) {
+  return bopResponse(`BOP_DEPENDENCY_${code}`, 424);
+}
+
 function validUpstream(response, expectedType, maxBytes) {
   if (response.status >= 300 && response.status < 400) return false;
   const contentType = String(response.headers.get("content-type") || "").toLowerCase();
@@ -131,12 +135,15 @@ async function handleBopProxy(request, env, url) {
       contentType: dayResponse.headers.get("content-type"),
       contentLength: dayResponse.headers.get("content-length"),
     });
-    return bopResponse("invalid BOP day response", 502);
+    if (!dayResponse.ok) return bopDependencyError(`STATUS_${dayResponse.status}`);
+    const contentType = String(dayResponse.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.includes("text/html")) return bopDependencyError("DAY_CONTENT_TYPE");
+    return bopDependencyError("DAY_CONTENT_LENGTH");
   }
 
   const dayBytes = await dayResponse.arrayBuffer();
   if (dayBytes.byteLength > BOP_DAY_MAX_BYTES) {
-    return bopResponse("BOP day response too large", 502);
+    return bopDependencyError("DAY_TOO_LARGE");
   }
   const html = new TextDecoder("windows-1252").decode(dayBytes);
   const officialLinks = bopDayLinks(html, day);
@@ -145,7 +152,7 @@ async function handleBopProxy(request, env, url) {
       requestedDate: day.isoDate,
       bytes: dayBytes.byteLength,
     });
-    return bopResponse("unrecognized BOP day response", 503);
+    return bopDependencyError("DAY_UNRECOGNIZED");
   }
 
   if (dayMatch) {
@@ -178,7 +185,10 @@ async function handleBopProxy(request, env, url) {
     return bopResponse("BOP document unavailable", 504);
   }
   if (!documentResponse.ok || !validUpstream(documentResponse, "application/pdf", BOP_DOCUMENT_MAX_BYTES)) {
-    return bopResponse("invalid BOP document response", 502);
+    if (!documentResponse.ok) return bopDependencyError(`DOCUMENT_STATUS_${documentResponse.status}`);
+    const contentType = String(documentResponse.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.includes("application/pdf")) return bopDependencyError("DOCUMENT_CONTENT_TYPE");
+    return bopDependencyError("DOCUMENT_CONTENT_LENGTH");
   }
   return bopResponse(documentResponse.body, 200, "application/pdf");
 }

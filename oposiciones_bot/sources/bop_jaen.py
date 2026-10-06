@@ -27,6 +27,15 @@ class BOPJaenSource(SourceAdapter):
     name = "bop_jaen"
     endpoint = "https://bop.dipujaen.es/bop/{date}"
 
+    @staticmethod
+    def _request_error(exc: Exception) -> str:
+        response = getattr(exc, "response", None)
+        if response is not None and response.headers.get("x-bop-proxy") == "1":
+            detail = clean_text(response.text)[:160]
+            if detail:
+                return f"{type(exc).__name__}: {exc} ({detail})"
+        return f"{type(exc).__name__}: {exc}"
+
     def _proxy_headers(self) -> dict[str, str]:
         token = getattr(self, "_proxy_token", "")
         return {"Authorization": f"Bearer {token}"} if token else {}
@@ -83,7 +92,7 @@ class BOPJaenSource(SourceAdapter):
             except Exception as fallback:
                 fallback_detail = f"portada: {type(fallback).__name__}: {fallback}"
             proxy_detail = (
-                f"; proxy privado: {type(proxy_error).__name__}: {proxy_error}"
+                f"; proxy privado: {self._request_error(proxy_error)}"
                 if proxy_error
                 else ""
             )

@@ -115,12 +115,14 @@ test("BOP proxy rejects invalid dates, unknown edicts and invalid upstream types
 
     mode = "wrong-type";
     const wrongType = await worker.fetch(new Request(`https://example.com/bop/day/${day.path}`, { headers }), { TELEGRAM_BOT_TOKEN: "private-token" }, {});
-    assert.equal(wrongType.status, 502);
+    assert.equal(wrongType.status, 424);
+    assert.equal(await wrongType.text(), "BOP_DEPENDENCY_DAY_CONTENT_TYPE");
 
     mode = "waf-html";
     globalThis.fetch = async () => new Response("<html><h1>Error temporal</h1></html>", { status: 200, headers: { "content-type": "text/html" } });
     const unrecognized = await worker.fetch(new Request(`https://example.com/bop/day/${day.path}`, { headers }), { TELEGRAM_BOT_TOKEN: "private-token" }, {});
-    assert.equal(unrecognized.status, 503);
+    assert.equal(unrecognized.status, 424);
+    assert.equal(await unrecognized.text(), "BOP_DEPENDENCY_DAY_UNRECOGNIZED");
   } finally { globalThis.fetch = originalFetch; }
 });
 
