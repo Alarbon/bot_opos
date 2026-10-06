@@ -95,7 +95,6 @@ async function fetchBopDay(day) {
     headers: {
       accept: "text/html,application/xhtml+xml",
       "accept-language": "es-ES,es;q=0.9",
-      "user-agent": "oposiciones-telegram-worker/1.0",
     },
     redirect: "manual",
     cf: { cacheEverything: true, cacheTtl: day.ageDays > 0 ? 86400 : 300 },
@@ -127,6 +126,11 @@ async function handleBopProxy(request, env, url) {
     return bopResponse(null, 204);
   }
   if (!dayResponse.ok || !validUpstream(dayResponse, "text/html", BOP_DAY_MAX_BYTES)) {
+    console.warn("BOP day rejected", {
+      status: dayResponse.status,
+      contentType: dayResponse.headers.get("content-type"),
+      contentLength: dayResponse.headers.get("content-length"),
+    });
     return bopResponse("invalid BOP day response", 502);
   }
 
@@ -137,7 +141,11 @@ async function handleBopProxy(request, env, url) {
   const html = new TextDecoder("windows-1252").decode(dayBytes);
   const officialLinks = bopDayLinks(html, day);
   if (!officialLinks.length && !validEmptyBopDay(html, day)) {
-    return bopResponse("unrecognized BOP day response", 502);
+    console.warn("BOP day HTML not recognized", {
+      requestedDate: day.isoDate,
+      bytes: dayBytes.byteLength,
+    });
+    return bopResponse("unrecognized BOP day response", 503);
   }
 
   if (dayMatch) {
@@ -161,7 +169,6 @@ async function handleBopProxy(request, env, url) {
       headers: {
         accept: "application/pdf",
         "accept-language": "es-ES,es;q=0.9",
-        "user-agent": "oposiciones-telegram-worker/1.0",
       },
       redirect: "manual",
       cf: { cacheEverything: true, cacheTtl: day.ageDays > 0 ? 86400 : 300 },
