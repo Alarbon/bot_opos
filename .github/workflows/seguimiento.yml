@@ -1,0 +1,49 @@
+name: Gestionar seguimiento
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        required: true
+        type: choice
+        options: [follow, unfollow]
+      process_id:
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: oposiciones-production-state
+  cancel-in-progress: false
+jobs:
+  tracking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Actualizar seguimiento
+        env:
+          OPERATION: ${{ inputs.operation }}
+          PROCESS_ID: ${{ inputs.process_id }}
+        run: python main.py catalog --operation "$OPERATION" --process "$PROCESS_ID"
+      - name: Guardar seguimiento
+        run: |
+          git config user.name "oposiciones-bot"
+          git config user.email "actions@github.com"
+          git add data/oposiciones.db data/catalog.json
+          git diff --cached --quiet || git commit -m "bot: update followed processes"
+          git push
+      - name: Confirmar en Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          OPERATION: ${{ inputs.operation }}
+          PROCESS_ID: ${{ inputs.process_id }}
+        run: |
+          python -c 'import os; from oposiciones_bot.telegram import TelegramSettings, TelegramClient; s=TelegramSettings.from_environment(); assert s, "Faltan secretos Telegram"; TelegramClient(s).send(("✅ Seguimiento activado: " if os.environ["OPERATION"] == "follow" else "✅ Seguimiento desactivado: ") + os.environ["PROCESS_ID"][:8])'

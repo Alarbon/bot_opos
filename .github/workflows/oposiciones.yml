@@ -58,9 +58,10 @@ jobs:
         if: ${{ inputs.dry_run != true }}
         shell: bash
         run: |
+          python main.py catalog
           git config user.name "oposiciones-bot"
           git config user.email "actions@github.com"
-          git add data/oposiciones.db
+          git add data/oposiciones.db data/catalog.json
           git diff --cached --quiet || git commit -m "bot: collect opposition updates"
           git push
 
@@ -116,6 +117,7 @@ jobs:
         shell: bash
         run: |
           python main.py db check
-          git add data/oposiciones.db
+          python main.py catalog
+          git add data/oposiciones.db data/catalog.json
           git diff --cached --quiet || git commit -m "bot: persist notification receipts"
           git push

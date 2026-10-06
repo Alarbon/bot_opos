@@ -625,12 +625,35 @@ que cualquier título concreto sea admitido.
 
 Las nuevas oportunidades requieren acceso libre/mixto y fecha límite oficial
 confirmada, no vencida. Anuncios de notas, exámenes o admitidos no son nuevas
-oportunidades. Se mantienen actualizaciones de procesos ya registrados que
-siguen cumpliendo el perfil; el bot no sabe si te has inscrito realmente.
+oportunidades. Las actualizaciones y recordatorios requieren seguimiento
+explícito; el bot no sabe si te has inscrito realmente.
 Los avisos pendientes antiguos se revisan otra vez antes de enviarlos.
 
 SAS: se consulta el tablón de ofertas específicas y la página de evolución de
 Técnico Especialista en Informática de OEP 2025, además del BOJA. No es una
 garantía de cobertura exhaustiva de todos los centros o páginas paginadas.
-Con estos filtros conservadores puede omitirse una convocatoria cuyo grupo,
-titulación o plazo no puedan extraerse automáticamente.
+Las convocatorias informáticas con datos inciertos se conservan en el catálogo
+como POR REVISAR, no como inscripción confirmada. Grupos conocidos distintos
+de B/C1, exigencia universitaria y puestos no informáticos siguen excluidos.
+
+## Consulta y seguimiento desde Telegram
+
+- `/buscar`: actualizar fuentes en GitHub; al acabar usa `/convocatorias`.
+- `/convocatorias N`: lista paginada de oportunidades, revisión y seguimiento.
+- `/detalle ID` o `/buscar ID`: ficha disponible, enlaces e historial detectado.
+- `/seguir ID`: guardar seguimiento explícito; GitHub confirma al terminar.
+- `/dejar ID`: quitar seguimiento; GitHub confirma al terminar.
+- `/seguimientos N`: lista de seguimientos ya guardados.
+- `/ayuda`: instrucciones y actualización del menú de comandos.
+
+El ID es el prefijo de 8 caracteres que muestra el catálogo. Seguir no equivale
+a inscribirse. Las fichas muestran datos extraídos, no sustituyen las bases.
+Los comandos de seguimiento son asíncronos y comparten la misma exclusión
+mutua que la búsqueda. Comprueba el enlace de ejecución si no llega confirmación.
+
+`data/catalog.json` es una exportación sin credenciales, con fechas de consulta
+y cobertura de fuentes, regenerada al recoger datos y guardar seguimientos.
+El Worker la lee del repositorio público sin ampliar permisos del token.
+La base y el catálogo del repositorio público incluyen los procesos seguidos:
+no guardes información personal de inscripción. No se añade almacenamiento
+ni servicios de pago en Cloudflare.

@@ -427,3 +427,16 @@ def can_apply(candidate: Candidate, today: date) -> bool:
     except ValueError:
         return False
     return True
+
+
+def reviewable(candidate: Candidate, config: AppConfig) -> bool:
+    """Keep uncertain IT posts, never confirmed excluded groups/university posts."""
+    from copy import deepcopy
+    relaxed = deepcopy(config.data)
+    rules = relaxed.setdefault("eligibility", {})
+    rules["require_it_qualification"] = False
+    rules["require_confirmed_qualification"] = False
+    if not candidate.group:
+        rules["allowed_groups"] = []
+    probe = Candidate.from_dict(candidate.to_dict())
+    return evaluate_candidate(probe, AppConfig(relaxed, config.path)).include

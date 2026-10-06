@@ -1,6 +1,8 @@
 timezone: Europe/Madrid
 
 eligibility:
+  show_review: true
+  explicit_follow_only: true
   require_it_qualification: true
   require_it_role_in_title: true
   allowed_groups: [B, C1]

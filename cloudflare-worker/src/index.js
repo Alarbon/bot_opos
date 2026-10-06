@@ -29,6 +29,11 @@ async function telegram(env, method, payload) {
 }
 
 async function reply(env, chatId, text) {
+  if (text.length > 3600) {
+    const chunks = text.match(/[\s\S]{1,3500}/gu) || [];
+    for (const chunk of chunks) await reply(env, chatId, chunk);
+    return;
+  }
   return telegram(env, "sendMessage", {
     chat_id: chatId,
     text,
@@ -49,15 +54,20 @@ async function configureTelegram(request, env) {
     commands: [
       { command: "buscar", description: "Iniciar una búsqueda ahora" },
       { command: "estado", description: "Consultar la última ejecución" },
+      { command: "convocatorias", description: "Oportunidades y procesos por revisar" },
+      { command: "detalle", description: "Ficha completa: /detalle ID" },
+      { command: "seguir", description: "Activar avisos: /seguir ID" },
+      { command: "dejar", description: "Desactivar avisos: /dejar ID" },
+      { command: "seguimientos", description: "Ver procesos que sigues" },
       { command: "ayuda", description: "Mostrar la ayuda" },
     ],
   });
 }
 
-async function dispatchSearch(env) {
+async function dispatchSearch(env, operation = null, processId = null) {
   const owner = String(env.GITHUB_OWNER || "Alarbon").trim();
   const repo = String(env.GITHUB_REPO || "bot_opos").trim();
-  const workflow = String(env.GITHUB_WORKFLOW || "oposiciones.yml").trim();
+  const workflow = operation ? "seguimiento.yml" : String(env.GITHUB_WORKFLOW || "oposiciones.yml").trim();
   const ref = String(env.GITHUB_REF || "main").trim();
   const token = required(env, "GITHUB_TOKEN");
   const url = `${GITHUB_API}/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
@@ -70,12 +80,59 @@ async function dispatchSearch(env) {
       "user-agent": "oposiciones-telegram-worker/1.0",
       "x-github-api-version": "2026-03-10",
     },
-    body: JSON.stringify({ ref, inputs: { dry_run: false } }),
+    body: JSON.stringify({ ref, inputs: operation ? { operation, process_id: processId } : { dry_run: false } }),
   });
   if (response.status !== 200 && response.status !== 204) {
     const detail = await response.text();
     throw new Error(`GitHub no inicio el workflow (${response.status}): ${detail.slice(0, 300)}`);
   }
+  return response.status === 200 ? (await response.json()).html_url : null;
+}
+
+async function catalog(env) {
+  const owner = encodeURIComponent(env.GITHUB_OWNER || "Alarbon");
+  const repo = encodeURIComponent(env.GITHUB_REPO || "bot_opos");
+  const ref = encodeURIComponent(env.GITHUB_REF || "main");
+  const response = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${ref}/data/catalog.json`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Catálogo todavía no disponible. Prueba /buscar y espera a que termine.");
+  const data = await response.json();
+  if (!Array.isArray(data.processes)) throw new Error("Catálogo inválido");
+  return data;
+}
+
+function findProcess(data, id) {
+  if (!/^[a-f0-9-]{8,36}$/i.test(id)) throw new Error("Usa /detalle ID con el ID que aparece en /convocatorias (mínimo 8 caracteres).");
+  const matches = data.processes.filter(p => p.id.startsWith(id.toLowerCase()));
+  if (matches.length !== 1) throw new Error("ID no encontrado o ambiguo; consulta /convocatorias.");
+  return matches[0];
+}
+
+function listProcesses(data, followedOnly = false, page = 1) {
+  const items = data.processes.filter(p => !followedOnly || p.followed);
+  const pages = Math.max(1, Math.ceil(items.length / 10));
+  if (!Number.isInteger(page) || page < 1 || page > pages) throw new Error(`Página inválida. Hay ${pages} página(s).`);
+  const labels = { OPEN: "✅ Plazo y perfil confirmados", REVIEW: "🔎 Por revisar; inscripción no confirmada", TRACKING: "📌 Seguimiento; no es una nueva inscripción" };
+  return [followedOnly ? "📌 Tus seguimientos" : "📋 Convocatorias informáticas", `Datos consultados: ${data.generated_at}`, `Página ${page}/${pages}. Actualiza con /buscar.`, "",
+    ...(items.length ? items.slice((page - 1) * 10, page * 10).map(p => `${p.id.slice(0, 8)} — ${p.title}\n${labels[p.category] || "Por revisar"}${p.followed ? " · Siguiendo" : ""}\n${p.organisation}\n/detalle ${p.id.slice(0, 8)}`) : ["No hay procesos registrados en esta lista."]),
+    "", `Más páginas: /${followedOnly ? "seguimientos" : "convocatorias"} N`, "Para recibir cambios: /seguir ID. Para quitar: /dejar ID.",
+    ...(data.sources?.some(s => s.status === "ERROR") ? ["⚠️ Algunas fuentes fallaron en la última consulta; cobertura incompleta."] : []),
+  ].join("\n\n");
+}
+
+function processDetail(p, data) {
+  const value = v => v === null || v === undefined || v === "" ? "No confirmado" : String(v);
+  const labels = { OPEN: "✅ Oportunidad con plazo y perfil confirmados", REVIEW: "🔎 POR REVISAR — no confirma que puedas inscribirte", TRACKING: "📌 PROCESO EN SEGUIMIENTO — no es una nueva inscripción" };
+  const links = [...(p.links || [])];
+  if (p.url && !links.some(l => l.url === p.url)) links.unshift({ label: "Fuente principal", url: p.url });
+  return [labels[p.category], `ID: ${p.id.slice(0, 8)}`, `Puesto: ${p.title}`, `Organismo: ${p.organisation}`, `Ámbito: ${[p.locality, p.province, p.scope].filter(Boolean).join(" · ") || "No confirmado"}`,
+    `Grupo: ${value(p.group)}`, `Plazas: ${value(p.positions)}`, `Acceso: ${value(p.access)}`, `Titulación: ${value(p.qualification_text)}`, `Compatibilidad: ${value(p.compatibility)}`,
+    ...(p.review_reason ? [`Pendiente: ${p.review_reason}`] : []), `Estado: ${p.status}`, `Publicación: ${value(p.publication_date)}`, `Fin de solicitudes: ${value(p.deadline)} (${p.deadline_confirmed ? "fecha confirmada" : "sin confirmar"})`,
+    `Examen: ${value(p.exam_date)} · Hora: ${value(p.exam_time)} · Lugar: ${value(p.exam_place)}`, `Resumen: ${value(p.summary)}`,
+    `Última consulta: ${p.last_seen}`, `Último cambio: ${p.last_changed}`, `Catálogo: ${data.generated_at}`,
+    "Historial detectado:", ...(p.history?.length ? p.history.map(h => `${h.date}: ${h.kind} ${h.changes.join(", ")}`) : ["Sin cambios adicionales registrados."]),
+    "Enlaces oficiales:", ...links.filter(l => /^https?:\/\//.test(l.url)).map(l => `${l.label || "Documento"}\n${l.url}`),
+    `Seguimiento: ${p.followed ? "ACTIVO" : "NO ACTIVO"}`, `/seguir ${p.id.slice(0, 8)} · /dejar ${p.id.slice(0, 8)}`, "Seguir no te inscribe. Confirma los requisitos exactos y el plazo en las bases oficiales.",
+  ].join("\n\n");
 }
 
 async function latestStatus(env) {
@@ -116,14 +173,30 @@ async function handleUpdate(update, env) {
   if (chatId !== allowedChatId) return;
 
   const command = commandFrom(message.text);
+  const argument = message.text.trim().split(/\s+/)[1] || "";
+  if (["/convocatorias", "/seguimientos", "/detalle", "/seguir", "/dejar"].includes(command) || (command === "/buscar" && argument)) {
+    try {
+      const data = await catalog(env);
+      if (command === "/convocatorias" || command === "/seguimientos") {
+        await reply(env, chatId, listProcesses(data, command === "/seguimientos", argument ? Number(argument) : 1));
+      } else {
+        const process = findProcess(data, argument);
+        if (command === "/seguir" || command === "/dejar") {
+          const runUrl = await dispatchSearch(env, command === "/seguir" ? "follow" : "unfollow", process.id);
+          await reply(env, chatId, `⏳ Cambio de seguimiento solicitado para ${process.id.slice(0, 8)}. Se confirmará cuando GitHub lo guarde; todavía no está confirmado.\n${runUrl || "Consulta /seguimientos en unos minutos."}`);
+        } else await reply(env, chatId, processDetail(process, data));
+      }
+    } catch (error) { await reply(env, chatId, `❌ ${error.message || error}`); }
+    return;
+  }
   if (command === "/buscar") {
     await reply(env, chatId, "🔎 Solicitud recibida. Estoy iniciando la búsqueda en GitHub Actions.");
     try {
-      await dispatchSearch(env);
+      const runUrl = await dispatchSearch(env);
       await reply(
         env,
         chatId,
-        "✅ Búsqueda iniciada. Te enviaré aquí las convocatorias nuevas cuando termine.",
+        `✅ Búsqueda iniciada. Usa /estado para ver cuándo termina y /convocatorias para consultar los resultados, aunque no haya novedades.\n${runUrl || ""}`,
       );
     } catch (error) {
       await reply(env, chatId, `❌ No pude iniciar la búsqueda: ${String(error.message || error)}`);
@@ -141,6 +214,17 @@ async function handleUpdate(update, env) {
   }
 
   if (command === "/start" || command === "/ayuda") {
+    // Refresh the menu after deployments without changing the existing webhook.
+    await telegram(env, "setMyCommands", { commands: [
+      { command: "buscar", description: "Buscar novedades o /buscar ID" },
+      { command: "convocatorias", description: "Ver oportunidades y procesos por revisar" },
+      { command: "detalle", description: "Ficha e historial: /detalle ID" },
+      { command: "seguir", description: "Activar seguimiento: /seguir ID" },
+      { command: "dejar", description: "Desactivar seguimiento: /dejar ID" },
+      { command: "seguimientos", description: "Ver seguimientos activos" },
+      { command: "estado", description: "Consultar ejecución de la búsqueda" },
+      { command: "ayuda", description: "Ayuda y comandos" },
+    ] }).catch(error => console.error("command menu failed", error));
     await reply(
       env,
       chatId,
@@ -149,9 +233,16 @@ async function handleUpdate(update, env) {
         "",
         "/buscar — iniciar una búsqueda ahora",
         "/estado — consultar la última ejecución",
+        "/convocatorias — oportunidades y procesos por revisar",
+        "/detalle ID — información, bases e historial",
+        "/buscar ID — consultar la misma ficha sin iniciar otra búsqueda",
+        "/seguir ID — activar avisos de cambios",
+        "/dejar ID — desactivar seguimiento",
+        "/seguimientos — consultar lo que sigues",
         "/ayuda — mostrar esta ayuda",
         "",
         "Además, las búsquedas programadas siguen funcionando automáticamente.",
+        "Seguir una convocatoria no te inscribe. Los datos por revisar no confirman elegibilidad.",
       ].join("\n"),
     );
   }

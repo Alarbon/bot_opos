@@ -38,3 +38,30 @@ for (const status of [200, 204, 403]) {
     }
   });
 }
+
+for (const command of ["/convocatorias", "/detalle aaaaaaaa", "/buscar aaaaaaaa", "/seguir aaaaaaaa", "/dejar aaaaaaaa", "/seguimientos"]) {
+  test(`catalog command ${command}`, async () => {
+    const originalFetch = globalThis.fetch;
+    const messages = [];
+    const dispatches = [];
+    const process = { id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", title: "Técnico informático", organisation: "Martos", category: "REVIEW", followed: true, history: [], links: [], status: "DETECTADA" };
+    globalThis.fetch = async (url, options) => {
+      if (url.startsWith("https://raw.githubusercontent.com/")) return Response.json({ processes: [process], generated_at: "2026-10-06", sources: [] });
+      if (url.startsWith("https://api.github.com/")) {
+        dispatches.push(JSON.parse(options.body));
+        return Response.json({ html_url: "https://github.com/test/run" });
+      }
+      messages.push(JSON.parse(options.body).text);
+      return Response.json({ ok: true, result: {} });
+    };
+    try {
+      let pending;
+      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { text: command, chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+      await pending;
+      assert.equal(messages.length, 1);
+      assert.ok(!messages[0].startsWith("❌"));
+      assert.equal(dispatches.length, command.startsWith("/seguir ") || command.startsWith("/dejar ") ? 1 : 0);
+      if (dispatches.length) assert.equal(dispatches[0].inputs.process_id, process.id);
+    } finally { globalThis.fetch = originalFetch; }
+  });
+}

@@ -36,7 +36,7 @@ from .normalization import (
 )
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 SCHEMA = """
@@ -146,6 +146,10 @@ CREATE TABLE IF NOT EXISTS source_runs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_source_runs_name ON source_runs(source, started_at DESC);
+CREATE TABLE IF NOT EXISTS followed_processes (
+    process_id TEXT PRIMARY KEY REFERENCES processes(id) ON DELETE CASCADE,
+    followed_at TEXT NOT NULL
+);
 """
 
 
@@ -278,6 +282,28 @@ class SQLiteStore:
             with self.connection:
                 self.connection.executescript(MIGRATION_V3)
                 self.connection.execute("PRAGMA user_version=3")
+        if version < 4:
+            with self.connection:
+                self.connection.execute("CREATE TABLE IF NOT EXISTS followed_processes (process_id TEXT PRIMARY KEY REFERENCES processes(id) ON DELETE CASCADE, followed_at TEXT NOT NULL)")
+                self.connection.execute("PRAGMA user_version=4")
+
+    def is_followed(self, process_id: str) -> bool:
+        return bool(self.connection.execute("SELECT 1 FROM followed_processes WHERE process_id=?", (process_id,)).fetchone())
+
+    def follow(self, prefix: str, enabled: bool = True) -> str:
+        import re
+        if not re.fullmatch(r"[a-f0-9-]{8,36}", prefix):
+            raise ValueError("ID invalido: usa el ID de /convocatorias")
+        matches = self.connection.execute("SELECT id FROM processes WHERE id LIKE ?", (prefix + "%",)).fetchall()
+        if len(matches) != 1:
+            raise ValueError("ID no encontrado o ambiguo")
+        process_id = matches[0]["id"]
+        with self.transaction() as db:
+            if enabled:
+                db.execute("INSERT OR IGNORE INTO followed_processes VALUES (?,?)", (process_id, utc_now_iso()))
+            else:
+                db.execute("DELETE FROM followed_processes WHERE process_id=?", (process_id,))
+        return process_id
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any
 
-from .classifiers import can_apply, evaluate_candidate
+from .classifiers import can_apply, evaluate_candidate, reviewable
 from .config import AppConfig
 from .db import SQLiteStore
 from .http import HttpClient
@@ -88,11 +88,18 @@ def collect(
             summary.fetched += len(candidates)
             for candidate in candidates:
                 decision = evaluate_candidate(candidate, config)
+                uncertain = not decision.include and config.get("eligibility.show_review", False) and reviewable(candidate, config)
+                if uncertain:
+                    from .models import Compatibility
+                    candidate.compatibility = Compatibility.REVIEW
+                    decision.include = True
+                    decision.compatibility = Compatibility.REVIEW
                 already_tracked = store.has_candidate(candidate)
                 if config.get("eligibility.only_enrollable_new", False):
                     if not already_tracked and not can_apply(candidate, today):
-                        summary.filtered += 1
-                        continue
+                        if not config.get("eligibility.show_review", False):
+                            summary.filtered += 1
+                            continue
                 if not decision.include and not already_tracked:
                     summary.filtered += 1
                     LOGGER.debug("Descartada %s: %s", candidate.source_id, decision.reason)
@@ -110,6 +117,8 @@ def collect(
                 )
                 if config.get("eligibility.only_enrollable_new", False):
                     notify = notify and decision.include
+                    if not already_tracked and not can_apply(candidate, today):
+                        notify = False
                 result = store.ingest(candidate, decision, notify=notify)
                 if result.action == "created":
                     summary.created += 1
@@ -166,6 +175,18 @@ def dispatch(
         if config and config.get("eligibility.only_enrollable_new", False):
             candidate = Candidate.from_dict(json.loads(event["payload_json"])["candidate"])
             eligible = evaluate_candidate(candidate, config).include
+            if not eligible and config.get("eligibility.show_review", False) and reviewable(candidate, config):
+                eligible = True
+                from .models import Compatibility
+                candidate.compatibility = Compatibility.REVIEW
+                event = dict(event)
+                payload = json.loads(event["payload_json"])
+                payload["candidate"] = candidate.to_dict()
+                event["payload_json"] = json.dumps(payload)
+                if event["kind"] == EventKind.NEW.value:
+                    event["kind"] = EventKind.REVIEW.value
+            if event["kind"] in {EventKind.UPDATE.value, EventKind.REMINDER.value} and config.get("eligibility.explicit_follow_only", False):
+                eligible = eligible and store.is_followed(event["process_id"])
             if event["kind"] in {EventKind.NEW.value, EventKind.REVIEW.value, EventKind.REMINDER.value}:
                 from zoneinfo import ZoneInfo
                 from datetime import datetime

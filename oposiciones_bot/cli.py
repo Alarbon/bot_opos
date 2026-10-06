@@ -10,6 +10,7 @@ from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from .config import load_config
+from .catalog import build_catalog, export_catalog
 from .db import SQLiteStore
 from .http import HttpClient, HttpSettings
 from .models import OutboxStatus
@@ -42,6 +43,11 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--today", help="fecha ISO para pruebas (AAAA-MM-DD)")
     run.add_argument("--limit", type=int, default=20, help="maximo de avisos por envio")
     run.add_argument("--log-level", default="INFO")
+    catalog = subparsers.add_parser("catalog", help="exportar y gestionar seguimientos")
+    catalog.add_argument("--config", default="config.yaml")
+    catalog.add_argument("--operation", choices=["export", "follow", "unfollow"], default="export")
+    catalog.add_argument("--process", default="")
+    catalog.add_argument("--output", default="data/catalog.json")
 
     outbox = subparsers.add_parser("outbox", help="operar la cola transaccional")
     outbox.add_argument("--config", default="config.yaml")
@@ -245,6 +251,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _outbox(args)
     if args.command == "db":
         return _database(args)
+    if args.command == "catalog":
+        config = load_config(args.config)
+        today = datetime.now(ZoneInfo(config.get("timezone", "Europe/Madrid"))).date()
+        store = SQLiteStore(config.database_path)
+        try:
+            if args.operation != "export":
+                matches = [p for p in build_catalog(store, config, today)["processes"] if p["id"].startswith(args.process)]
+                if not args.process or len(matches) != 1:
+                    raise ValueError("ID no encontrado o ambiguo en el catalogo informatico")
+                store.follow(matches[0]["id"], args.operation == "follow")
+            export_catalog(store, config, today, Path(args.output))
+            return 0
+        finally:
+            store.close()
     return 2
 
 
