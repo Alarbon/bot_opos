@@ -617,9 +617,11 @@ volumen lo justifique.
 # Perfil personal de avisos
 
 El perfil configurado ahora exige puestos informáticos (técnico, auxiliar,
-especialista y equivalentes), grupo B o C1 confirmado y una titulación admitida
-de DAM, DAW, ASIR o la familia profesional de Informática y Comunicaciones.
-No basta con que el anuncio mencione herramientas informáticas o Bachiller.
+especialista y equivalentes), grupo B o C1 confirmado y una titulación compatible
+confirmada: DAM, DAW, ASIR, familia informática, o Bachiller/Técnico cuando las
+bases del puesto informático lo admitan (incluido TAI). No se exige que las
+bases restrinjan la titulación a la familia informática. No basta con que un
+puesto administrativo mencione herramientas informáticas.
 Las bases siguen siendo la autoridad: pertenecer a una familia no garantiza
 que cualquier título concreto sea admitido.
 

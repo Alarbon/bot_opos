@@ -3,7 +3,8 @@ timezone: Europe/Madrid
 eligibility:
   show_review: true
   explicit_follow_only: true
-  require_it_qualification: true
+  # Puesto informatico B/C1: tambien admite Bachiller o Tecnico si las bases lo permiten.
+  require_it_qualification: false
   require_it_role_in_title: true
   allowed_groups: [B, C1]
   require_confirmed_qualification: true

@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -6,6 +7,21 @@ from oposiciones_bot.classifiers import can_apply, evaluate_candidate, infer_sta
 from oposiciones_bot.models import ProcessStatus, SourceLink
 from oposiciones_bot.pipeline import collect, dispatch
 from oposiciones_bot.models import OutboxStatus
+from oposiciones_bot.config import load_config
+
+
+@pytest.mark.parametrize("title,group,qualification,expected", [
+    ("Convocatoria Técnico Informático", "C1", "Bachiller o título de Técnico", True),
+    ("Convocatoria Cuerpo de Técnicos Auxiliares de Informática de la Administración del Estado", "C1", "Bachiller o título de Técnico", True),
+    ("Convocatoria Técnico Especialista en Informática", "B", "Técnico Superior en Desarrollo de Aplicaciones Multiplataforma", True),
+    ("Convocatoria Administrativo", "C1", "Bachiller o título de Técnico", False),
+    ("Convocatoria Técnico Informático", "A2", "Grado universitario en Ingeniería Informática", False),
+    ("Convocatoria Técnico Informático", "C1", "", False),
+])
+def test_actual_profile_accepts_bachiller_only_for_it_posts(candidate_factory, title, group, qualification, expected):
+    config = load_config(Path(__file__).resolve().parents[1] / "config.yaml")
+    candidate = candidate_factory(title=title, group=group, qualification_text=qualification)
+    assert evaluate_candidate(candidate, config).include is expected
 
 
 @pytest.mark.parametrize("group", ["A1", "A2", "C2", ""])
