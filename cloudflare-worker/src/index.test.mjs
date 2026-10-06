@@ -39,6 +39,28 @@ for (const status of [200, 204, 403]) {
   });
 }
 
+for (const matchingReport of [true, false]) {
+  test(`/estado uses local dates and ignores stale summary (${matchingReport})`, async () => {
+    const originalFetch = globalThis.fetch;
+    const messages = [];
+    globalThis.fetch = async (url, options) => {
+      if (url.startsWith("https://api.github.com/")) return Response.json({ workflow_runs: [{ id: 42, event: "schedule", status: "completed", conclusion: "success", run_started_at: "2026-10-06T08:30:00Z", updated_at: "2026-10-06T08:32:00Z", html_url: "https://github.com/run/42" }] });
+      if (url.startsWith("https://raw.githubusercontent.com/")) return Response.json({ run_id: matchingReport ? "42" : "41", collection: { sources_attempted: 8, errors: { bop_jaen: "500" }, fetched: 12, created: 0, updated: 1 }, delivery: { sent: 0, retryable: 0, uncertain: 0 } });
+      messages.push(JSON.parse(options.body).text);
+      return Response.json({ ok: true, result: {} });
+    };
+    try {
+      let pending;
+      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { text: "/estado", chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+      await pending;
+      assert.match(messages[0], /automática programada/);
+      assert.match(messages[0], /10:30:00/);
+      assert.equal(messages[0].includes("bop_jaen"), matchingReport);
+      if (!matchingReport) assert.match(messages[0], /no se muestran estadísticas antiguas/);
+    } finally { globalThis.fetch = originalFetch; }
+  });
+}
+
 for (const command of ["/convocatorias", "/detalle", "/detalle aaaaaaaa", "/detalle bbbbbbbb", "/buscar aaaaaaaa", "/seguir aaaaaaaa", "/dejar aaaaaaaa", "/seguimientos"]) {
   test(`catalog command ${command}`, async () => {
     const originalFetch = globalThis.fetch;

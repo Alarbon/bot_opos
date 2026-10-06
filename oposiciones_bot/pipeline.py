@@ -25,6 +25,7 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass(slots=True)
 class CollectionSummary:
+    sources_attempted: int = 0
     fetched: int = 0
     included: int = 0
     created: int = 0
@@ -76,6 +77,7 @@ def collect(
     lookback = int(config.get("collection.lookback_days", 10))
     bootstrap_days = int(config.get("collection.bootstrap_notify_days", 14))
     for adapter, source_config in sources:
+        summary.sources_attempted += 1
         source_lookback = lookback
         if config.get("collection.incremental", False):
             checkpoint = store.collection_checkpoint(adapter.name, str(config.get("timezone", "Europe/Madrid")))

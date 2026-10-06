@@ -51,19 +51,17 @@ jobs:
         run: python main.py run --dry-run
 
       - name: Collect and enqueue
+        id: collect
         if: ${{ inputs.dry_run != true }}
-        run: python main.py run --collect-only
+        run: python main.py run --collect-only --metrics-file data/run_metrics.json
 
       - name: Persist collected state
+        id: persist_collect
         if: ${{ inputs.dry_run != true }}
         shell: bash
         run: |
           python main.py catalog
-          git config user.name "oposiciones-bot"
-          git config user.email "actions@github.com"
-          git add data/oposiciones.db data/catalog.json
-          git diff --cached --quiet || git commit -m "bot: collect opposition updates"
-          git push
+          python scripts/publish_state.py --message "bot: collect opposition updates"
 
       - name: Validate Telegram secrets
         if: ${{ inputs.dry_run != true }}
@@ -86,20 +84,7 @@ jobs:
         if: ${{ inputs.dry_run != true }}
         shell: bash
         run: |
-          git add data/oposiciones.db
-          git diff --cached --quiet || git commit -m "bot: claim notification outbox"
-          claim_commit="$(git rev-parse HEAD)"
-          for attempt in 1 2 3; do
-            if git push; then
-              exit 0
-            fi
-            git fetch origin
-            if git merge-base --is-ancestor "$claim_commit" "origin/$(git branch --show-current)"; then
-              exit 0
-            fi
-            sleep $((attempt * 2))
-          done
-          exit 1
+          python scripts/publish_state.py --message "bot: claim notification outbox"
 
       - name: Send Telegram
         id: send_telegram
@@ -107,9 +92,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python main.py outbox dispatch --batch-file data/outbox_batch.json
+        run: python main.py outbox dispatch --batch-file data/outbox_batch.json --metrics-file data/run_metrics.json
 
       - name: Persist delivery receipts
+        id: persist_receipts
         # Never publish a local SENDING commit when the pre-send push failed.
         # Once this step has actually started, receipts (including UNCERTAIN)
         # must be persisted even if one delivery failed.
@@ -118,6 +104,34 @@ jobs:
         run: |
           python main.py db check
           python main.py catalog
-          git add data/oposiciones.db data/catalog.json
-          git diff --cached --quiet || git commit -m "bot: persist notification receipts"
-          git push
+          python scripts/publish_state.py --message "bot: persist notification receipts"
+
+      - name: Preparar resumen de busqueda
+        id: report
+        if: ${{ always() && !cancelled() && inputs.dry_run != true }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+          COLLECT_OUTCOME: ${{ steps.collect.outcome }}
+          PERSIST_OUTCOME: ${{ steps.persist_collect.outcome }}
+          SEND_OUTCOME: ${{ steps.send_telegram.outcome }}
+          RECEIPTS_OUTCOME: ${{ steps.persist_receipts.outcome }}
+        run: python scripts/run_report.py --status "$JOB_STATUS"
+
+      - name: Guardar resumen
+        # Do not accidentally publish an unaccepted SENDING/data commit just
+        # to save a report after a pre-send persistence failure.
+        if: ${{ always() && !cancelled() && steps.report.outcome == 'success' && steps.collect.outcome != 'failure' && steps.persist_collect.outcome != 'failure' && steps.persist_claim.outcome != 'failure' }}
+        run: |
+          python scripts/publish_state.py --message "bot: record search result"
+
+      - name: Enviar resumen a Telegram
+        if: ${{ always() && !cancelled() && steps.report.outcome == 'success' }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          COLLECT_OUTCOME: ${{ steps.collect.outcome }}
+          PERSIST_OUTCOME: ${{ steps.persist_collect.outcome }}
+          SEND_OUTCOME: ${{ steps.send_telegram.outcome }}
+          RECEIPTS_OUTCOME: ${{ steps.persist_receipts.outcome }}
+        run: python scripts/run_report.py --status "$JOB_STATUS" --send

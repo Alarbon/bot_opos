@@ -5,6 +5,7 @@ import json
 import logging
 import sys
 from datetime import date, datetime
+from dataclasses import asdict
 from pathlib import Path
 from typing import Sequence
 from zoneinfo import ZoneInfo
@@ -43,6 +44,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--today", help="fecha ISO para pruebas (AAAA-MM-DD)")
     run.add_argument("--limit", type=int, default=20, help="maximo de avisos por envio")
     run.add_argument("--log-level", default="INFO")
+    run.add_argument("--metrics-file")
     catalog = subparsers.add_parser("catalog", help="exportar y gestionar seguimientos")
     catalog.add_argument("--config", default="config.yaml")
     catalog.add_argument("--operation", choices=["export", "follow", "unfollow"], default="export")
@@ -60,6 +62,7 @@ def _parser() -> argparse.ArgumentParser:
     outbox_claim.add_argument("--batch-file", required=True)
     outbox_dispatch = outbox_sub.add_parser("dispatch")
     outbox_dispatch.add_argument("--batch-file", required=True)
+    outbox_dispatch.add_argument("--metrics-file")
     outbox_retry = outbox_sub.add_parser("retry")
     outbox_retry.add_argument("event_id")
     outbox_suppress = outbox_sub.add_parser("suppress")
@@ -88,6 +91,7 @@ def _telegram(config) -> TelegramClient | None:
 
 
 def _run(args: argparse.Namespace) -> int:
+    started_at = datetime.now(ZoneInfo("Europe/Madrid")).isoformat()
     config = load_config(args.config)
     today = (
         date.fromisoformat(args.today)
@@ -123,6 +127,8 @@ def _run(args: argparse.Namespace) -> int:
                     sources=sources,
                     today=today,
                 )
+                if args.metrics_file and not args.dry_run:
+                    _save_metrics(args.metrics_file, {"started_at": started_at, "collection": asdict(collection)})
                 LOGGER.info(
                     "Recogidas=%s incluidas=%s nuevas=%s actualizadas=%s sin_cambios=%s filtradas=%s recordatorios=%s errores=%s",
                     collection.fetched,
@@ -206,6 +212,8 @@ def _outbox(args: argparse.Namespace) -> int:
                 LOGGER.error("Faltan TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID")
                 return 2
             result = dispatch(store=store, telegram=telegram, event_ids=ids, config=config)
+            if args.metrics_file:
+                _save_metrics(args.metrics_file, {"delivery": asdict(result)})
             print(
                 f"Enviados={result.sent} reintentables={result.retryable} inciertos={result.uncertain}"
             )
@@ -231,6 +239,14 @@ def _database(args: argparse.Namespace) -> int:
         return 0
     finally:
         store.close()
+
+
+def _save_metrics(path: str, values: dict) -> None:
+    target = Path(path)
+    data = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+    data.update(values)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(data, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

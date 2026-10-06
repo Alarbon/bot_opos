@@ -156,7 +156,32 @@ async function latestStatus(env) {
   const run = data.workflow_runs?.[0];
   if (!run) return "Todavía no hay ejecuciones registradas.";
   const state = run.status === "completed" ? run.conclusion : run.status;
-  return `Última ejecución: ${state || "desconocido"}\n${run.html_url}`;
+  const states = { success: "✅ Completada", failure: "❌ Fallida", in_progress: "⏳ En curso", queued: "⏳ En cola", cancelled: "Cancelada", waiting: "Esperando", timed_out: "Tiempo agotado" };
+  const localDate = value => value ? new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", dateStyle: "short", timeStyle: "medium" }).format(new Date(value)) : "No registrada";
+  const lines = ["Última búsqueda: " + (states[state] || state || "desconocido"),
+    `Origen: ${run.event === "schedule" ? "automática programada" : run.event === "workflow_dispatch" ? "manual" : run.event}`,
+    `Inicio: ${localDate(run.run_started_at || run.created_at)} (hora peninsular)`,
+    ...(run.status === "completed" ? [`Fin registrado por GitHub: ${localDate(run.updated_at)}`] : []),
+    "Horario: 08:30, 12:30, 17:30 y 20:30 · Europe/Madrid.",
+  ];
+  try {
+    const summaryResponse = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(env.GITHUB_REF || "main")}/data/latest_run.json`, { cache: "no-store" });
+    if (summaryResponse.ok) {
+      const report = await summaryResponse.json();
+      if (String(report.run_id) === String(run.id)) {
+        const collection = report.collection;
+        if (collection) {
+          const failed = Object.keys(collection.errors || {});
+          lines.push(`Fuentes: ${collection.sources_attempted - failed.length} correctas / ${failed.length} fallidas.`,
+            `Registros examinados: ${collection.fetched}; nuevos procesos: ${collection.created}; actualizados: ${collection.updated}.`);
+          if (failed.length) lines.push("⚠️ Cobertura incompleta. Pendientes: " + failed.join(", "));
+        } else lines.push("No se completó la consulta de fuentes.");
+        if (report.delivery) lines.push(`Avisos enviados: ${report.delivery.sent}; reintentos pendientes: ${report.delivery.retryable}; entregas inciertas: ${report.delivery.uncertain}.`);
+      } else lines.push("Resumen de esta ejecución todavía no disponible; no se muestran estadísticas antiguas.");
+    } else lines.push("Resumen detallado todavía no disponible.");
+  } catch { lines.push("No se pudo cargar el resumen detallado."); }
+  lines.push(run.html_url);
+  return lines.join("\n");
 }
 
 function commandFrom(message) {

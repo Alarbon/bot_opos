@@ -22,6 +22,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -34,11 +35,7 @@ jobs:
         run: python main.py catalog --operation "$OPERATION" --process "$PROCESS_ID"
       - name: Guardar seguimiento
         run: |
-          git config user.name "oposiciones-bot"
-          git config user.email "actions@github.com"
-          git add data/oposiciones.db data/catalog.json
-          git diff --cached --quiet || git commit -m "bot: update followed processes"
-          git push
+          python scripts/publish_state.py --message "bot: update followed processes"
       - name: Confirmar en Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

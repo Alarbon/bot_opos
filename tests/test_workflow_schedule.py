@@ -10,3 +10,13 @@ def test_daily_search_keeps_spanish_local_hours():
     assert workflow["on"]["schedule"] == [
         {"cron": "30 8,12,17,20 * * *", "timezone": "Europe/Madrid"}
     ]
+
+
+def test_report_never_publishes_unaccepted_claim_commit():
+    path = Path(__file__).resolve().parents[1] / ".github/workflows/oposiciones.yml"
+    workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    steps = workflow["jobs"]["search"]["steps"]
+    publish = next(step for step in steps if step.get("name") == "Guardar resumen")
+    assert "steps.persist_claim.outcome != 'failure'" in publish["if"]
+    notify = next(step for step in steps if step.get("name") == "Enviar resumen a Telegram")
+    assert "always()" in notify["if"]

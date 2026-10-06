@@ -638,6 +638,21 @@ de B/C1, exigencia universitaria y puestos no informáticos siguen excluidos.
 
 ## Consulta y seguimiento desde Telegram
 
+Al finalizar una búsqueda manual o automática se envía un resumen a Telegram,
+incluso si no hay novedades: fuentes correctas/fallidas, registros examinados,
+procesos registrados/actualizados y avisos entregados o pendientes. Un proceso
+registrado no equivale necesariamente a una oportunidad con inscripción abierta.
+Los fallos se avisan si el runner alcanza el paso final y Telegram está disponible;
+cancelaciones forzadas, fallo del propio runner o secretos inválidos pueden
+impedir el aviso. GitHub Actions sigue siendo la autoridad del resultado final.
+
+`/estado` muestra el origen manual/automático, fechas peninsulares, horario y
+estadísticas de `data/latest_run.json` solo si pertenecen a la ejecución actual.
+`scripts/publish_state.py` reintenta el guardado e integra commits concurrentes
+de código mediante rebase. Nunca fuerza un push ni sobrescribe cambios de estado
+remotos: si cambió la base, catálogo o informe, se detiene para revisión. Los
+workflows de búsqueda y seguimiento conservan su bloqueo compartido.
+
 Las búsquedas automáticas se programan todos los días a las **08:30, 12:30,
 17:30 y 20:30** en `Europe/Madrid` (España peninsular), tanto en verano como
 en invierno. GitHub Actions puede iniciar una ejecución con retraso.
