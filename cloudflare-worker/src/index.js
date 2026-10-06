@@ -93,7 +93,7 @@ async function catalog(env) {
   const owner = encodeURIComponent(env.GITHUB_OWNER || "Alarbon");
   const repo = encodeURIComponent(env.GITHUB_REPO || "bot_opos");
   const ref = encodeURIComponent(env.GITHUB_REF || "main");
-  const response = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${ref}/data/catalog.json`, { cache: "no-store" });
+  const response = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${ref}/data/catalog.json?fresh=${Date.now()}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Catálogo todavía no disponible. Prueba /buscar y espera a que termine.");
   const data = await response.json();
   if (!Array.isArray(data.processes)) throw new Error("Catálogo inválido");

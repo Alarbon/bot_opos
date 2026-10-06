@@ -30,6 +30,9 @@ class BOPJaenSource(SourceAdapter):
         try:
             return self.client.get_text(page_url)
         except Exception as original:
+            if getattr(getattr(original, "response", None), "status_code", None) == 404:
+                raise
+            fallback_detail = "portada no corresponde al dia solicitado"
             # The home page is another official route to the latest bulletin.
             # Never substitute a different date for a failed historical day.
             try:
@@ -43,9 +46,9 @@ class BOPJaenSource(SourceAdapter):
                 if dates == {day.isoformat()}:
                     LOGGER.warning("BOP Jaen: recuperado %s mediante portada oficial", day)
                     return html
-            except Exception:
-                pass
-            raise original
+            except Exception as fallback:
+                fallback_detail = f"portada: {type(fallback).__name__}: {fallback}"
+            raise RuntimeError(f"BOP Jaen: ruta diaria: {original}; alternativa oficial: {fallback_detail}") from original
 
     def fetch(self, context: FetchContext) -> list[Candidate]:
         candidates: list[Candidate] = []

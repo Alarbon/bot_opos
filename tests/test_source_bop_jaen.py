@@ -33,5 +33,5 @@ def test_official_home_fallback_requires_same_day(bulletin_day, accepted):
     if accepted:
         assert 'Edicto' in source._daily_html('https://bop.dipujaen.es/bop/06-10-2026', date(2026, 10, 6))
     else:
-        with pytest.raises(requests.HTTPError):
+        with pytest.raises(RuntimeError, match="no corresponde"):
             source._daily_html('https://bop.dipujaen.es/bop/06-10-2026', date(2026, 10, 6))
