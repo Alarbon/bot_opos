@@ -19,7 +19,8 @@ def main():
                 if header in response.headers:
                     print(f"{header}: {response.headers[header]}")
             print(f"Bytes: {len(response.content)}; SHA256: {hashlib.sha256(response.content).hexdigest()}")
-            print(f"Articulos: {len(re.findall(r'<article\\b', response.text))}")
+            articles = len(re.findall(r"<article\b", response.text))
+            print(f"Articulos: {articles}")
             if response.status_code >= 400:
                 body = re.sub(r"<[^>]+>", " ", response.text)
                 print("Error (extracto):", " ".join(body.split())[:2000])
