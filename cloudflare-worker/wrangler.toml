@@ -1,0 +1,9 @@
+name = "oposiciones-telegram"
+main = "src/index.js"
+compatibility_date = "2026-10-06"
+
+[vars]
+GITHUB_OWNER = "Alarbon"
+GITHUB_REPO = "bot_opos"
+GITHUB_WORKFLOW = "oposiciones.yml"
+GITHUB_REF = "main"

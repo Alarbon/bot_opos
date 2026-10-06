@@ -389,6 +389,24 @@ se ejecuta a las `06:17`, `10:17`, `14:17` y `18:17` UTC, además de admitir
 `workflow_dispatch`. GitHub puede retrasar los cron y las horas locales cambian
 con el horario de verano.
 
+### Comandos desde Telegram
+
+GitHub Actions no puede recibir mensajes de Telegram directamente. Para tener
+comandos inmediatos sin mantener un servidor, el directorio
+[`cloudflare-worker/`](cloudflare-worker/) incluye un puente para Cloudflare
+Workers. Mantiene la búsqueda y SQLite en GitHub, y solo recibe comandos:
+
+- `/buscar`: lanza una ejecución real de `oposiciones.yml`;
+- `/estado`: muestra el estado de la última ejecución;
+- `/ayuda` y `/start`: muestran una ayuda clara.
+
+El Worker compara cada mensaje con `TELEGRAM_CHAT_ID`, valida el secreto del
+webhook de Telegram y usa un token de GitHub de granularidad fina limitado a
+este repositorio con permiso `Actions: Read and write`. Los secretos no deben
+añadirse a `wrangler.toml`; se configuran cifrados en Cloudflare. Consulta
+[`cloudflare-worker/README.md`](cloudflare-worker/README.md) para el esquema de
+despliegue.
+
 ### Preparar el repositorio
 
 Este directorio debe estar dentro de un repositorio GitHub. Si todavía no lo
