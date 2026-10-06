@@ -1,14 +1,14 @@
 {
   "version": 1,
-  "generated_at": "2026-10-06T18:37:17+00:00",
+  "generated_at": "2026-10-06T19:10:18+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
       "source_id": "0f4efb2d-1c21-4eb0-844d-70dcb9c36e21",
       "title": "Convocatoria bases 1 plaza tecnico medio de informatica",
       "organisation": "Ayuntamiento Martos",
-      "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/36173/modelo-solicitud-una-plaza-de-tecnico-a-de-informatica-por-concurso-oposicion.pdf",
-      "publication_date": null,
+      "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/40978/acta-tribunal-seleccion-fase-de-oposicion-concurso-de-una-plaza-de-tecnico-a-de-informatica-de-fecha-22-de-diciembre-de-2025-por-el-sistema-de-concurso-oposicion-y-propuesta-de-nombramiento-como.pdf",
+      "publication_date": "2025-12-22",
       "summary": "Documentos de una única convocatoria: 10. Consulta las bases y el último anuncio en los enlaces oficiales.",
       "reference": "",
       "official_references": [],
@@ -21,33 +21,15 @@
         },
         {
           "source": "ayuntamiento_martos",
-          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/36172/modelo-de-autobaremacion-na-plaza-de-tecnico-a-de-informatica-por-concurso-oposicion.pdf",
-          "reference": "",
-          "label": "Modelo de autobaremación na Plaza de Técnico-a de Informática por Concurso-Oposición."
-        },
-        {
-          "source": "ayuntamiento_martos",
-          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/38749/aprobacion-de-la-lista-definitiva-de-admitidos-y-excluidos-para-la-provision-de-una-plaza-de-tecnico-de-informatica-por-el-sistema-de-concurso-oposicion-y-fecha-de-examen.pdf",
-          "reference": "",
-          "label": "Aprobación de la Lista Definitiva de Admitidos y Excluidos para la provisión de una Plaza de Técnico de Informática, por el sistema de Concurso-Oposición, y fecha de examen."
-        },
-        {
-          "source": "ayuntamiento_martos",
           "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/36171/publicacion-boletin-oficial-del-estado-una-plaza-de-tecnico-a-de-informatica-a-concurso-oposicion.pdf",
           "reference": "",
           "label": "Publicación Boletín Oficial del Estado una Plaza de Tecnico-a de Informática, a Concurso-Oposición."
         },
         {
           "source": "ayuntamiento_martos",
-          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/39579/acta-tribunal-seleccion-fase-de-oposicion-de-una-plaza-de-tenico-a-de-informatica-de-fecha-14-de-octubre-de-2025-por-el-sistema-de-concuros-oposicion-y-fecha-para-la-lectura-de-su-ejercicio.pdf",
+          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/36172/modelo-de-autobaremacion-na-plaza-de-tecnico-a-de-informatica-por-concurso-oposicion.pdf",
           "reference": "",
-          "label": "Acta Tribunal Selección fase de Oposición de una Plaza de Ténico-a de Informática, de fecha 14 de octubre de 2025, por el sistema de Concuros-Oposición y fecha para la lectura de su ejercicio."
-        },
-        {
-          "source": "ayuntamiento_martos",
-          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/40978/acta-tribunal-seleccion-fase-de-oposicion-concurso-de-una-plaza-de-tecnico-a-de-informatica-de-fecha-22-de-diciembre-de-2025-por-el-sistema-de-concurso-oposicion-y-propuesta-de-nombramiento-como.pdf",
-          "reference": "",
-          "label": "Acta Tribunal Selección fase de Oposición (Concurso), de una Plaza de Técnico-a de Informática, de fecha 22 de diciembre de 2025, por el sistema de Concurso-Oposición y propuesta de Nombramiento como Personal Laboral Fijo para toma de posesión."
+          "label": "Modelo de autobaremación na Plaza de Técnico-a de Informática por Concurso-Oposición."
         },
         {
           "source": "ayuntamiento_martos",
@@ -57,9 +39,21 @@
         },
         {
           "source": "ayuntamiento_martos",
-          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/40950/acta-tribunal-seleccion-fase-de-oposicion-ejercicio-practico-de-una-plaza-de-tecnico-a-de-informatica-de-fecha-19-de-diciembre-de-2025-por-el-sistema-de-concurso-oposicion-y-fecha-de-apertura-del.pdf",
+          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/38749/aprobacion-de-la-lista-definitiva-de-admitidos-y-excluidos-para-la-provision-de-una-plaza-de-tecnico-de-informatica-por-el-sistema-de-concurso-oposicion-y-fecha-de-examen.pdf",
           "reference": "",
-          "label": "Acta Tribunal Selección fase de Oposición (ejercicio práctico), de una Plaza de Técnico-a de Informática, de fecha 19 de diciembre de 2025, por el sistema de Concurso-Oposición y fecha de apertura del sobre de anonimato y valoración del concurso de méritos."
+          "label": "Aprobación de la Lista Definitiva de Admitidos y Excluidos para la provisión de una Plaza de Técnico de Informática, por el sistema de Concurso-Oposición, y fecha de examen."
+        },
+        {
+          "source": "ayuntamiento_martos",
+          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/39579/acta-tribunal-seleccion-fase-de-oposicion-de-una-plaza-de-tenico-a-de-informatica-de-fecha-14-de-octubre-de-2025-por-el-sistema-de-concuros-oposicion-y-fecha-para-la-lectura-de-su-ejercicio.pdf",
+          "reference": "",
+          "label": "Acta Tribunal Selección fase de Oposición de una Plaza de Ténico-a de Informática, de fecha 14 de octubre de 2025, por el sistema de Concuros-Oposición y fecha para la lectura de su ejercicio."
+        },
+        {
+          "source": "ayuntamiento_martos",
+          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/39858/acta-tribunal-seleccion-fase-de-oposicion-lectura-de-su-ejercicio-de-una-plaza-de-tenico-a-de-informatica-de-fecha-24-de-noviembre-de-2025-por-el-sistema-de-concuros-oposicion-y-fecha-de-convocato.pdf",
+          "reference": "",
+          "label": "Acta Tribunal Selección fase de Oposición (lectura de su ejercicio) de una Plaza de Ténico-a de Informática, de fecha 24 de noviembre de 2025, por el sistema de Concuros-Oposición y fecha de convocatoria para el segundo ejercicio (práctico) de la Fase de Oposición."
         },
         {
           "source": "ayuntamiento_martos",
@@ -69,9 +63,15 @@
         },
         {
           "source": "ayuntamiento_martos",
-          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/39858/acta-tribunal-seleccion-fase-de-oposicion-lectura-de-su-ejercicio-de-una-plaza-de-tenico-a-de-informatica-de-fecha-24-de-noviembre-de-2025-por-el-sistema-de-concuros-oposicion-y-fecha-de-convocato.pdf",
+          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/40950/acta-tribunal-seleccion-fase-de-oposicion-ejercicio-practico-de-una-plaza-de-tecnico-a-de-informatica-de-fecha-19-de-diciembre-de-2025-por-el-sistema-de-concurso-oposicion-y-fecha-de-apertura-del.pdf",
           "reference": "",
-          "label": "Acta Tribunal Selección fase de Oposición (lectura de su ejercicio) de una Plaza de Ténico-a de Informática, de fecha 24 de noviembre de 2025, por el sistema de Concuros-Oposición y fecha de convocatoria para el segundo ejercicio (práctico) de la Fase de Oposición."
+          "label": "Acta Tribunal Selección fase de Oposición (ejercicio práctico), de una Plaza de Técnico-a de Informática, de fecha 19 de diciembre de 2025, por el sistema de Concurso-Oposición y fecha de apertura del sobre de anonimato y valoración del concurso de méritos."
+        },
+        {
+          "source": "ayuntamiento_martos",
+          "url": "https://martos.es/download/1150/convocatoria-bases-1-plaza-tecnico-medio-de-informatica/40978/acta-tribunal-seleccion-fase-de-oposicion-concurso-de-una-plaza-de-tecnico-a-de-informatica-de-fecha-22-de-diciembre-de-2025-por-el-sistema-de-concurso-oposicion-y-propuesta-de-nombramiento-como.pdf",
+          "reference": "",
+          "label": "Acta Tribunal Selección fase de Oposición (Concurso), de una Plaza de Técnico-a de Informática, de fecha 22 de diciembre de 2025, por el sistema de Concurso-Oposición y propuesta de Nombramiento como Personal Laboral Fijo para toma de posesión."
         }
       ],
       "locality": "Martos",
@@ -106,78 +106,86 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T18:19:27+00:00",
-      "last_changed": "2026-10-06T18:19:27+00:00",
-      "history": []
+      "last_seen": "2026-10-06T19:10:02+00:00",
+      "last_changed": "2026-10-06T19:10:02+00:00",
+      "history": [
+        {
+          "date": "2026-10-06T19:10:02+00:00",
+          "kind": "UPDATE",
+          "changes": [
+            "localidad"
+          ]
+        }
+      ]
     }
   ],
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-10-06T18:19:29+00:00",
+      "started_at": "2026-10-06T19:10:03+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-10-06T18:18:55+00:00",
+      "started_at": "2026-10-06T19:09:31+00:00",
       "status": "OK",
       "items_found": 2,
       "error": ""
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-10-06T18:19:27+00:00",
+      "started_at": "2026-10-06T19:10:02+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "boe",
-      "started_at": "2026-10-06T18:18:32+00:00",
+      "started_at": "2026-10-06T19:09:10+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "boja",
-      "started_at": "2026-10-06T18:18:33+00:00",
+      "started_at": "2026-10-06T19:09:11+00:00",
       "status": "OK",
       "items_found": 8,
       "error": ""
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-10-06T18:18:35+00:00",
+      "started_at": "2026-10-06T19:09:14+00:00",
       "status": "ERROR",
       "items_found": 0,
       "error": "RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses'))"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-10-06T18:19:40+00:00",
+      "started_at": "2026-10-06T19:10:13+00:00",
       "status": "OK",
       "items_found": 3,
       "error": ""
     },
     {
       "source": "iaap",
-      "started_at": "2026-10-06T18:18:50+00:00",
+      "started_at": "2026-10-06T19:09:26+00:00",
       "status": "OK",
       "items_found": 5,
       "error": ""
     },
     {
       "source": "sas",
-      "started_at": "2026-10-06T18:18:26+00:00",
+      "started_at": "2026-10-06T19:09:04+00:00",
       "status": "OK",
       "items_found": 1,
       "error": ""
     },
     {
       "source": "universidad_jaen",
-      "started_at": "2026-10-06T18:19:41+00:00",
+      "started_at": "2026-10-06T19:10:15+00:00",
       "status": "OK",
       "items_found": 2,
       "error": ""
