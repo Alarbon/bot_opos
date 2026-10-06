@@ -1,0 +1,117 @@
+name: Buscar oposiciones
+
+on:
+  schedule:
+    # GitHub usa UTC. Minuto 17 evita el pico de la hora; en Espana las horas
+    # locales varian una hora con el horario de verano.
+    - cron: "17 6,10,14,18 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Simular sin persistir ni enviar Telegram"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: oposiciones-production-state
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Test
+        run: pip install -r requirements-dev.txt && pytest
+
+      - name: Dry run
+        if: ${{ inputs.dry_run == true }}
+        run: python main.py run --dry-run
+
+      - name: Collect and enqueue
+        if: ${{ inputs.dry_run != true }}
+        run: python main.py run --collect-only
+
+      - name: Persist collected state
+        if: ${{ inputs.dry_run != true }}
+        shell: bash
+        run: |
+          git config user.name "oposiciones-bot"
+          git config user.email "actions@github.com"
+          git add data/oposiciones.db
+          git diff --cached --quiet || git commit -m "bot: collect opposition updates"
+          git push
+
+      - name: Validate Telegram secrets
+        if: ${{ inputs.dry_run != true }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        shell: bash
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID" >&2
+            exit 1
+          fi
+
+      - name: Claim outbox before external send
+        if: ${{ inputs.dry_run != true }}
+        run: python main.py outbox claim --limit 20 --batch-file data/outbox_batch.json
+
+      - name: Persist claimed state
+        id: persist_claim
+        if: ${{ inputs.dry_run != true }}
+        shell: bash
+        run: |
+          git add data/oposiciones.db
+          git diff --cached --quiet || git commit -m "bot: claim notification outbox"
+          claim_commit="$(git rev-parse HEAD)"
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            git fetch origin
+            if git merge-base --is-ancestor "$claim_commit" "origin/$(git branch --show-current)"; then
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          exit 1
+
+      - name: Send Telegram
+        id: send_telegram
+        if: ${{ inputs.dry_run != true }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py outbox dispatch --batch-file data/outbox_batch.json
+
+      - name: Persist delivery receipts
+        # Never publish a local SENDING commit when the pre-send push failed.
+        # Once this step has actually started, receipts (including UNCERTAIN)
+        # must be persisted even if one delivery failed.
+        if: ${{ always() && inputs.dry_run != true && steps.send_telegram.outcome != 'skipped' }}
+        shell: bash
+        run: |
+          python main.py db check
+          git add data/oposiciones.db
+          git diff --cached --quiet || git commit -m "bot: persist notification receipts"
+          git push

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=78"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oposiciones-bot"
+version = "0.1.0"
+description = "Monitor de convocatorias publicas de informatica compatibles con FP superior"
+requires-python = ">=3.12"
+dependencies = [
+  "beautifulsoup4==4.14.2",
+  "lxml==6.0.2",
+  "PyMuPDF==1.26.5",
+  "PyYAML==6.0.3",
+  "rapidfuzz==3.14.1",
+  "requests==2.32.5",
+  "tenacity==9.1.2",
+  "tzdata>=2025.2",
+]
+
+[project.scripts]
+oposiciones-bot = "oposiciones_bot.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["oposiciones_bot*"]
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers"
+testpaths = ["tests"]
+markers = ["network: prueba manual que usa fuentes oficiales reales"]
+

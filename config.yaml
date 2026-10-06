@@ -1,0 +1,105 @@
+timezone: Europe/Madrid
+
+locations:
+  priority:
+    - Martos
+    - Torredonjimeno
+    - Torredelcampo
+    - Jaen
+  nearby:
+    - Jamilena
+    - Los Villares
+    - Fuensanta de Martos
+    - Alcaudete
+    - Porcuna
+    - Villardompardo
+    - Fuerte del Rey
+    - Mancha Real
+    - Mengibar
+    - Arjona
+    - La Guardia de Jaen
+    - Valdepenas de Jaen
+  radius_from_martos_km: 40
+
+collection:
+  lookback_days: 10
+  bootstrap_notify_days: 14
+  fetch_document_text: true
+  max_document_bytes: 15000000
+  request_timeout_seconds: 25
+  user_agent: "oposiciones-bot/0.1 (+uso personal; contacto configurable)"
+
+database:
+  path: data/oposiciones.db
+
+notifications:
+  telegram: true
+  delivery_policy: at_most_once
+  parse_mode: HTML
+  disable_web_page_preview: true
+  source_failure_threshold: 3
+  source_failure_cooldown_hours: 24
+
+reminders:
+  enabled: true
+  days_before: [7, 3, 1]
+
+special_processes:
+  tai_estado: true
+  junta_informatica: true
+
+sources:
+  boe:
+    enabled: true
+    kind: boe_api
+  pag:
+    # Desactivado por defecto: robots.txt exige una ventana horaria y 60 s entre
+    # peticiones. El adaptador existe para uso manual y conservador.
+    enabled: false
+    kind: pag
+    max_pages: 30
+  boja:
+    enabled: true
+    kind: boja_api
+    batch_size: 100
+  bop_jaen:
+    enabled: true
+    kind: bop_jaen
+  iaap:
+    enabled: true
+    kind: html
+    urls:
+      - "https://www.juntadeandalucia.es/organismos/iaap/servicios/anuncios.html?f%5B0%5D=areas_de_actividad_iaap%3A2317"
+      - "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos?field_categoria_funcional_target_id=2257&field_en_curso_value=1&field_20_de_plazas_adicionales_value=All"
+  ayuntamiento_martos:
+    enabled: true
+    kind: html
+    urls:
+      - "https://martos.es/recursos-humanos/empleo/personal-funcionario/"
+      - "https://martos.es/recursos-humanos/empleo/personal-laboral-fijo/"
+      - "https://martos.es/recursos-humanos/empleo/personal-laboral-temporal/"
+  ayuntamiento_torredonjimeno:
+    # Desactivada mientras la sede no presente una cadena TLS valida. No se
+    # desactiva la verificacion del certificado ni se consulta /board.
+    enabled: false
+    kind: html
+    urls:
+      # /board esta bloqueado por robots.txt; /info.0 es la portada permitida.
+      - "https://tosiria.sedelectronica.es/info.0"
+  ayuntamiento_torredelcampo:
+    enabled: true
+    kind: html
+    urls:
+      - "https://www.torredelcampo.es/de-interes/ofertas-de-empleo"
+  ayuntamiento_jaen:
+    enabled: true
+    kind: ayuntamiento_jaen
+  diputacion_jaen:
+    enabled: true
+    kind: diputacion_jaen_api
+  universidad_jaen:
+    enabled: true
+    kind: html
+    urls:
+      - "https://www.ujaen.es/servicios/servpod/anuncios?term_node_tid_depth=129&field_estado_de_convocatoria_target_id=26"
+

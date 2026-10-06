@@ -1,0 +1,9 @@
+beautifulsoup4==4.14.2
+lxml==6.0.2
+PyMuPDF==1.26.5
+PyYAML==6.0.3
+rapidfuzz==3.14.1
+requests==2.32.5
+tenacity==9.1.2
+tzdata>=2025.2
+
