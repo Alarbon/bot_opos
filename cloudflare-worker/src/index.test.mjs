@@ -1,9 +1,33 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFile } from "node:fs/promises";
-
 const source = await readFile(new URL("./index.js", import.meta.url), "utf8");
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+
+for (const [command, action] of [["/automatico_on", "enable"], ["/automatico_off", "disable"], ["/automatico_estado", null]]) {
+  test(`automatic control ${command}`, async () => {
+    const original = globalThis.fetch;
+    const calls = [], messages = [];
+    globalThis.fetch = async (url, options) => {
+      if (url.startsWith("https://api.github.com/")) {
+        calls.push([url, options.method || "GET"]);
+        return options.method === "PUT" ? new Response(null, { status: 204 }) : Response.json({ state: action === "disable" ? "disabled_manually" : "active" });
+      }
+      messages.push(JSON.parse(options.body).text);
+      return Response.json({ ok: true, result: {} });
+    };
+    try {
+      let pending;
+      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { text: command, chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+      await pending;
+      assert.equal(calls.length, action ? 2 : 1);
+      assert.ok(calls.every(([url]) => url.includes("automatico.yml")));
+      if (action) assert.ok(calls[0][0].endsWith("/" + action));
+      assert.ok(messages[0].includes("/buscar sigue disponible"));
+    } finally { globalThis.fetch = original; }
+  });
+}
+
 
 for (const status of [200, 204, 403]) {
   test(`/buscar handles GitHub HTTP ${status}`, async () => {

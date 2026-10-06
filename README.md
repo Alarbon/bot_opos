@@ -659,6 +659,13 @@ Las búsquedas automáticas se programan todos los días a las **08:30, 12:30,
 17:30 y 21:00** en `Europe/Madrid` (España peninsular), tanto en verano como
 en invierno. GitHub Actions puede iniciar una ejecución con retraso.
 
+El horario pertenece a `automatico.yml` (Programador automatico), que inicia
+`oposiciones.yml` con `automatic=true`. Los comandos `/automatico_on`,
+`/automatico_off` y `/automatico_estado` habilitan, deshabilitan o consultan
+solo ese programador mediante el permiso Actions de GitHub ya utilizado.
+`/buscar` sigue funcionando; apagar no cancela ejecuciones ya iniciadas.
+Tras desplegar el Worker, `/ayuda` actualiza el menú clicable de Telegram.
+
 La búsqueda es incremental por fuente: desde la fecha de su última consulta
 correcta hasta hoy, incluyendo ambos días. Una consulta fallida no avanza el
 punto de control. La primera consulta usa los 10 días configurados. Las

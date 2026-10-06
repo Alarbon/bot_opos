@@ -1,14 +1,13 @@
 name: Buscar oposiciones
+run-name: ${{ inputs.automatic && 'Busqueda automatica programada' || 'Busqueda manual' }}
 
 on:
-  schedule:
-    # Horas peninsulares fijas, con ajuste automatico de verano/invierno.
-    - cron: "30 8,12,17 * * *"
-      timezone: "Europe/Madrid"
-    - cron: "0 21 * * *"
-      timezone: "Europe/Madrid"
   workflow_dispatch:
     inputs:
+      automatic:
+        description: "Solicitud del programador automatico"
+        type: boolean
+        default: false
       dry_run:
         description: "Simular sin persistir ni enviar Telegram"
         required: false
@@ -112,6 +111,7 @@ jobs:
         id: report
         if: ${{ always() && !cancelled() && inputs.dry_run != true }}
         env:
+          SEARCH_AUTOMATIC: ${{ inputs.automatic }}
           JOB_STATUS: ${{ job.status }}
           COLLECT_OUTCOME: ${{ steps.collect.outcome }}
           PERSIST_OUTCOME: ${{ steps.persist_collect.outcome }}
@@ -129,6 +129,7 @@ jobs:
       - name: Enviar resumen a Telegram
         if: ${{ always() && !cancelled() && steps.report.outcome == 'success' }}
         env:
+          SEARCH_AUTOMATIC: ${{ inputs.automatic }}
           JOB_STATUS: ${{ job.status }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

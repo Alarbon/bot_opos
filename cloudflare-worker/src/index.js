@@ -1,5 +1,25 @@
 const TELEGRAM_API = "https://api.telegram.org";
 const GITHUB_API = "https://api.github.com";
+const AUTOMATIC_COMMANDS = [
+  { command: "automatico_on", description: "Activar búsquedas programadas" },
+  { command: "automatico_off", description: "Desactivar solo búsquedas programadas" },
+  { command: "automatico_estado", description: "Consultar interruptor automático" },
+];
+
+async function automaticControl(env, action) {
+  const owner = encodeURIComponent(env.GITHUB_OWNER || "Alarbon");
+  const repo = encodeURIComponent(env.GITHUB_REPO || "bot_opos");
+  const url = `${GITHUB_API}/repos/${owner}/${repo}/actions/workflows/automatico.yml`;
+  const headers = { accept: "application/vnd.github+json", authorization: `Bearer ${required(env, "GITHUB_TOKEN")}`, "user-agent": "oposiciones-telegram-worker/1.0", "x-github-api-version": "2026-03-10" };
+  if (action) {
+    const changed = await fetch(`${url}/${action}`, { method: "PUT", headers });
+    if (changed.status !== 204) throw new Error(`No se pudo cambiar el automático (GitHub ${changed.status}). No se confirma el cambio.`);
+  }
+  const response = await fetch(url, { headers, cache: "no-store" });
+  if (!response.ok) throw new Error(`No se pudo comprobar el automático (GitHub ${response.status}).`);
+  const workflow = await response.json();
+  return `${workflow.state === "active" ? "✅ Automático ACTIVADO" : workflow.state === "disabled_manually" ? "⏸ Automático DESACTIVADO" : "⚠️ Estado del programador: " + workflow.state}\nHorario: 08:30, 12:30, 17:30 y 21:00 · hora peninsular.\n/buscar sigue disponible. Apagar no cancela búsquedas ya iniciadas.\n/automatico_on\n/automatico_off\n/automatico_estado`;
+}
 
 function textResponse(text, status = 200) {
   return new Response(text, {
@@ -52,6 +72,7 @@ async function configureTelegram(request, env) {
   });
   await telegram(env, "setMyCommands", {
     commands: [
+      ...AUTOMATIC_COMMANDS,
       { command: "buscar", description: "Iniciar una búsqueda ahora" },
       { command: "estado", description: "Consultar la última ejecución" },
       { command: "convocatorias", description: "Oportunidades y procesos por revisar" },
@@ -159,7 +180,7 @@ async function latestStatus(env) {
   const states = { success: "✅ Completada", failure: "❌ Fallida", in_progress: "⏳ En curso", queued: "⏳ En cola", cancelled: "Cancelada", waiting: "Esperando", timed_out: "Tiempo agotado" };
   const localDate = value => value ? new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", dateStyle: "short", timeStyle: "medium" }).format(new Date(value)) : "No registrada";
   const lines = ["Última búsqueda: " + (states[state] || state || "desconocido"),
-    `Origen: ${run.event === "schedule" ? "automática programada" : run.event === "workflow_dispatch" ? "manual" : run.event}`,
+    `Origen: ${run.event === "schedule" || run.display_title === "Busqueda automatica programada" ? "automática programada" : run.event === "workflow_dispatch" ? "manual" : run.event}`,
     `Inicio: ${localDate(run.run_started_at || run.created_at)} (hora peninsular)`,
     ...(run.status === "completed" ? [`Fin registrado por GitHub: ${localDate(run.updated_at)}`] : []),
     "Horario: 08:30, 12:30, 17:30 y 21:00 · Europe/Madrid.",
@@ -169,6 +190,7 @@ async function latestStatus(env) {
     if (summaryResponse.ok) {
       const report = await summaryResponse.json();
       if (String(report.run_id) === String(run.id)) {
+        if (report.event === "schedule") lines[1] = "Origen: automática programada";
         const collection = report.collection;
         if (collection) {
           const failed = Object.keys(collection.errors || {});
@@ -199,6 +221,12 @@ async function handleUpdate(update, env) {
 
   const command = commandFrom(message.text);
   const argument = message.text.trim().split(/\s+/)[1] || "";
+  if (["/automatico_on", "/automatico_off", "/automatico_estado"].includes(command)) {
+    try {
+      await reply(env, chatId, await automaticControl(env, command === "/automatico_on" ? "enable" : command === "/automatico_off" ? "disable" : null));
+    } catch (error) { await reply(env, chatId, `❌ ${error.message || error}`); }
+    return;
+  }
   if (["/convocatorias", "/seguimientos", "/detalle", "/seguir", "/dejar"].includes(command) || (command === "/buscar" && argument)) {
     try {
       const data = await catalog(env);
@@ -245,6 +273,7 @@ async function handleUpdate(update, env) {
   if (command === "/start" || command === "/ayuda") {
     // Refresh the menu after deployments without changing the existing webhook.
     await telegram(env, "setMyCommands", { commands: [
+      ...AUTOMATIC_COMMANDS,
       { command: "buscar", description: "Buscar novedades o /buscar ID" },
       { command: "convocatorias", description: "Ver oportunidades y procesos por revisar" },
       { command: "detalle", description: "Ficha e historial: /detalle ID" },
@@ -268,9 +297,12 @@ async function handleUpdate(update, env) {
         "/seguir ID — activar avisos de cambios",
         "/dejar ID — desactivar seguimiento",
         "/seguimientos — consultar lo que sigues",
+        "/automatico_on — activar búsquedas programadas",
+        "/automatico_off — apagar solo el automático",
+        "/automatico_estado — consultar el interruptor",
         "/ayuda — mostrar esta ayuda",
         "",
-        "Además, las búsquedas programadas siguen funcionando automáticamente.",
+        "Horario programado: 08:30, 12:30, 17:30 y 21:00 · hora peninsular. Consulta /automatico_estado; GitHub puede retrasar el inicio.",
         "Seguir una convocatoria no te inscribe. Los datos por revisar no confirman elegibilidad.",
       ].join("\n"),
     );
