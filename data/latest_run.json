@@ -1,21 +1,22 @@
 {
-  "run_id": "37522904396",
+  "run_id": "37525957279",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/37522904396",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/37525957279",
   "status": "success",
-  "finished_at": "2026-10-06T20:00:25.846542+00:00",
-  "started_at": "2026-10-06T21:58:48.555335+02:00",
+  "finished_at": "2026-10-06T20:24:30.061345+00:00",
+  "started_at": "2026-10-06T22:22:51.026894+02:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 21,
+    "fetched": 22,
     "included": 6,
     "created": 0,
     "updated": 0,
     "unchanged": 6,
-    "filtered": 15,
+    "filtered": 16,
     "reminders": 0,
-    "errors": {
-      "bop_jaen": "RuntimeError: BOP Jaen: ruta diaria: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses')); alternativa oficial: portada: RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many 500 error responses')); proxy privado: HTTPError: 424 Client Error: Failed Dependency for url: https://oposiciones-telegram.alarbon98.workers.dev/bop/day/06-10-2026 (BOP_DEPENDENCY_STATUS_500)"
+    "errors": {},
+    "warnings": {
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-05; 2026-10-06 pendiente de indexación"
     }
   },
   "delivery": {
