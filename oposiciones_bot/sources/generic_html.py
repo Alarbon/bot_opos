@@ -11,6 +11,7 @@ from ..enrichment import enrich_candidate
 from ..models import Candidate, SourceLink
 from ..normalization import clean_text, parse_date, stable_hash
 from ..parsers import html_to_text, pdf_to_text
+from ..process_groups import martos_process_folder
 from .base import (
     FetchContext,
     SourceAdapter,
@@ -105,12 +106,39 @@ class GenericHTMLSource(SourceAdapter):
                     full_text=full_text,
                     province="" if self.name in {"iaap", "sas"} else "Jaen",
                     scope="Andalucia" if self.name in {"iaap", "sas"} else "Local",
-                    links=[SourceLink(self.name, href, "", "Fuente oficial"), *detail_links],
+                    links=[SourceLink(self.name, href, "", title), *detail_links],
                     raw={"listing_url": listing_url},
                 )
                 results.append(enrich_candidate(candidate))
         if not successful_listings and errors:
             raise errors[0]
+        if self.name == "ayuntamiento_martos":
+            grouped: dict[str, list[Candidate]] = {}
+            others = []
+            for candidate in results:
+                folder = martos_process_folder(candidate.url)
+                if folder:
+                    grouped.setdefault(folder[0], []).append(candidate)
+                else:
+                    others.append(candidate)
+            for folder_id, documents in grouped.items():
+                documents.sort(key=lambda c: c.publication_date or "", reverse=True)
+                latest = documents[0]
+                _, title = martos_process_folder(latest.url)
+                # Forms and marking sheets are attachments, not qualification bases.
+                bases = [c for c in documents if "bases" in c.title.lower() and "modelo" not in c.title.lower()]
+                candidate = Candidate(
+                    source=self.name, source_id=f"category-{folder_id}",
+                    reference=f"MARTOS-CATEGORY-{folder_id}", title=title,
+                    organisation=latest.organisation, url=latest.url,
+                    publication_date=latest.publication_date, province="Jaen", scope="Local",
+                    summary=f"{len(documents)} documentos de la misma convocatoria. Último documento: {latest.title}",
+                    full_text="\n".join(c.full_text for c in bases),
+                    links=[link for c in documents for link in c.links],
+                    raw={"current_milestone_text": latest.title + " " + latest.full_text},
+                )
+                others.append(enrich_candidate(candidate))
+            results = others
         return results
 
     @staticmethod
@@ -160,7 +188,7 @@ class GenericHTMLSource(SourceAdapter):
             classes = {str(value) for value in parent.get("class", [])}
             if parent.name in {"article", "tr", "li"} or any(
                 marker in " ".join(classes).lower()
-                for marker in ("views-row", "card", "resultado", "anuncio", "item")
+                for marker in ("views-row", "card", "resultado", "anuncio", "item", "filecontent")
             ):
                 return parent
         return anchor.parent if isinstance(anchor.parent, Tag) else None
@@ -204,7 +232,7 @@ class GenericHTMLSource(SourceAdapter):
                     return parsed
         text = clean_text(node.get_text(" ", strip=True))
         match = re.search(
-            r"(?:fecha\s+de\s+publicaci[oó]n|publicad[oa]|actualizad[oa])"
+            r"(?:fecha\s+de\s+publicaci[oó]n|fecha\s+a[ñn]adida|publicad[oa]|actualizad[oa])"
             r"[^\d]{0,30}(\d{1,2}[/-]\d{1,2}[/-]\d{4})",
             text,
             re.IGNORECASE,

@@ -39,12 +39,12 @@ for (const status of [200, 204, 403]) {
   });
 }
 
-for (const command of ["/convocatorias", "/detalle aaaaaaaa", "/buscar aaaaaaaa", "/seguir aaaaaaaa", "/dejar aaaaaaaa", "/seguimientos"]) {
+for (const command of ["/convocatorias", "/detalle", "/detalle aaaaaaaa", "/detalle bbbbbbbb", "/buscar aaaaaaaa", "/seguir aaaaaaaa", "/dejar aaaaaaaa", "/seguimientos"]) {
   test(`catalog command ${command}`, async () => {
     const originalFetch = globalThis.fetch;
     const messages = [];
     const dispatches = [];
-    const process = { id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", title: "Técnico informático", organisation: "Martos", category: "REVIEW", followed: true, history: [], links: [], status: "DETECTADA" };
+    const process = { id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", aliases: ["bbbbbbbb-cccc-dddd-eeee-ffffffffffff"], title: "Técnico informático", organisation: "Martos", category: "REVIEW", followed: true, history: [], links: [], status: "DETECTADA" };
     globalThis.fetch = async (url, options) => {
       if (url.startsWith("https://raw.githubusercontent.com/")) return Response.json({ processes: [process], generated_at: "2026-10-06", sources: [] });
       if (url.startsWith("https://api.github.com/")) {

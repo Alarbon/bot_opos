@@ -102,7 +102,7 @@ async function catalog(env) {
 
 function findProcess(data, id) {
   if (!/^[a-f0-9-]{8,36}$/i.test(id)) throw new Error("Usa /detalle ID con el ID que aparece en /convocatorias (mínimo 8 caracteres).");
-  const matches = data.processes.filter(p => p.id.startsWith(id.toLowerCase()));
+  const matches = data.processes.filter(p => [p.id, ...(p.aliases || [])].some(alias => alias.startsWith(id.toLowerCase())));
   if (matches.length !== 1) throw new Error("ID no encontrado o ambiguo; consulta /convocatorias.");
   return matches[0];
 }
@@ -111,7 +111,7 @@ function listProcesses(data, followedOnly = false, page = 1) {
   const items = data.processes.filter(p => !followedOnly || p.followed);
   const pages = Math.max(1, Math.ceil(items.length / 10));
   if (!Number.isInteger(page) || page < 1 || page > pages) throw new Error(`Página inválida. Hay ${pages} página(s).`);
-  const labels = { OPEN: "✅ Plazo y perfil confirmados", REVIEW: "🔎 Por revisar; inscripción no confirmada", TRACKING: "📌 Seguimiento; no es una nueva inscripción" };
+  const labels = { OPEN: "✅ Plazo y perfil confirmados", REVIEW: "🔎 Por revisar; inscripción no confirmada", TRACKING: "📌 Proceso avanzado o cerrado; no es una nueva inscripción" };
   return [followedOnly ? "📌 Tus seguimientos" : "📋 Convocatorias informáticas", `Datos consultados: ${data.generated_at}`, `Página ${page}/${pages}. Actualiza con /buscar.`, "",
     ...(items.length ? items.slice((page - 1) * 10, page * 10).map(p => `${p.id.slice(0, 8)} — ${p.title}\n${labels[p.category] || "Por revisar"}${p.followed ? " · Siguiendo" : ""}\n${p.organisation}\n/detalle ${p.id.slice(0, 8)}`) : ["No hay procesos registrados en esta lista."]),
     "", `Más páginas: /${followedOnly ? "seguimientos" : "convocatorias"} N`, "Para recibir cambios: /seguir ID. Para quitar: /dejar ID.",
@@ -121,7 +121,7 @@ function listProcesses(data, followedOnly = false, page = 1) {
 
 function processDetail(p, data) {
   const value = v => v === null || v === undefined || v === "" ? "No confirmado" : String(v);
-  const labels = { OPEN: "✅ Oportunidad con plazo y perfil confirmados", REVIEW: "🔎 POR REVISAR — no confirma que puedas inscribirte", TRACKING: "📌 PROCESO EN SEGUIMIENTO — no es una nueva inscripción" };
+  const labels = { OPEN: "✅ Oportunidad con plazo y perfil confirmados", REVIEW: "🔎 POR REVISAR — no confirma que puedas inscribirte", TRACKING: "📌 PROCESO AVANZADO O CERRADO — no es una nueva inscripción" };
   const links = [...(p.links || [])];
   if (p.url && !links.some(l => l.url === p.url)) links.unshift({ label: "Fuente principal", url: p.url });
   return [labels[p.category], `ID: ${p.id.slice(0, 8)}`, `Puesto: ${p.title}`, `Organismo: ${p.organisation}`, `Ámbito: ${[p.locality, p.province, p.scope].filter(Boolean).join(" · ") || "No confirmado"}`,
@@ -180,6 +180,10 @@ async function handleUpdate(update, env) {
       if (command === "/convocatorias" || command === "/seguimientos") {
         await reply(env, chatId, listProcesses(data, command === "/seguimientos", argument ? Number(argument) : 1));
       } else {
+        if (!argument) {
+          await reply(env, chatId, `Usa ${command} ID con uno de estos procesos:\n\n${listProcesses(data)}`);
+          return;
+        }
         const process = findProcess(data, argument);
         if (command === "/seguir" || command === "/dejar") {
           const runUrl = await dispatchSearch(env, command === "/seguir" ? "follow" : "unfollow", process.id);

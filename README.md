@@ -664,6 +664,13 @@ a inscribirse. Las fichas muestran datos extraídos, no sustituyen las bases.
 Los comandos de seguimiento son asíncronos y comparten la misma exclusión
 mutua que la búsqueda. Comprueba el enlace de ejecución si no llega confirmación.
 
+Los documentos de Martos se agrupan solo cuando comparten una carpeta oficial
+de convocatoria (`/download/ID/convocatoria.../`). No se agrupan por semejanza
+del título. Los registros antiguos se conservan y sus IDs redirigen a la ficha
+agrupada. Cada documento conserva su enlace; los formularios no sustituyen las
+bases como evidencia de titulación. «Proceso avanzado o cerrado» describe la
+fase, mientras «Seguimiento ACTIVO/NO ACTIVO» refleja tu elección explícita.
+
 `data/catalog.json` es una exportación sin credenciales, con fechas de consulta
 y cobertura de fuentes, regenerada al recoger datos y guardar seguimientos.
 El Worker la lee del repositorio público sin ampliar permisos del token.

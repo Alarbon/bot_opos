@@ -36,7 +36,7 @@ from .normalization import (
 )
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 SCHEMA = """
@@ -153,6 +153,10 @@ CREATE TABLE IF NOT EXISTS followed_processes (
 CREATE TABLE IF NOT EXISTS source_checkpoints (
     source TEXT PRIMARY KEY,
     covered_through TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS process_aliases (
+    alias_id TEXT PRIMARY KEY REFERENCES processes(id),
+    process_id TEXT NOT NULL REFERENCES processes(id)
 );
 """
 
@@ -294,6 +298,36 @@ class SQLiteStore:
             with self.connection:
                 self.connection.execute("CREATE TABLE IF NOT EXISTS source_checkpoints (source TEXT PRIMARY KEY, covered_through TEXT NOT NULL)")
                 self.connection.execute("PRAGMA user_version=5")
+        if version < 6:
+            with self.connection:
+                self.connection.execute("CREATE TABLE IF NOT EXISTS process_aliases (alias_id TEXT PRIMARY KEY REFERENCES processes(id), process_id TEXT NOT NULL REFERENCES processes(id))")
+                self.connection.execute("PRAGMA user_version=6")
+
+    def consolidate_document_folders(self) -> None:
+        from .process_groups import martos_process_folder
+        groups: dict[str, list[str]] = {}
+        rows = self.connection.execute("SELECT p.id,u.url FROM processes p JOIN process_urls u ON u.process_id=p.id WHERE u.source='ayuntamiento_martos' ORDER BY p.first_seen,p.id").fetchall()
+        for row in rows:
+            folder = martos_process_folder(row["url"])
+            if folder and row["id"] not in groups.setdefault(folder[0], []):
+                groups[folder[0]].append(row["id"])
+        with self.transaction() as db:
+            for folder, ids in groups.items():
+                canonical = ids[0]
+                reference = f"MARTOS-CATEGORY-{folder}"
+                existing = db.execute("SELECT process_id FROM official_references WHERE reference=?", (reference,)).fetchone()
+                if existing and existing["process_id"] in ids:
+                    canonical = existing["process_id"]
+                db.execute("INSERT OR IGNORE INTO official_references VALUES (?,?,?)", (reference, canonical, utc_now_iso()))
+                for process_id in ids:
+                    if process_id != canonical:
+                        db.execute("INSERT OR REPLACE INTO process_aliases VALUES (?,?)", (process_id, canonical))
+                        if db.execute("SELECT 1 FROM followed_processes WHERE process_id=?", (process_id,)).fetchone():
+                            db.execute("INSERT OR IGNORE INTO followed_processes VALUES (?,?)", (canonical, utc_now_iso()))
+
+    def canonical_process_id(self, process_id: str) -> str:
+        row = self.connection.execute("SELECT process_id FROM process_aliases WHERE alias_id=?", (process_id,)).fetchone()
+        return row["process_id"] if row else process_id
 
     def collection_checkpoint(self, source: str, timezone_name: str = "Europe/Madrid") -> date | None:
         row = self.connection.execute("SELECT covered_through FROM source_checkpoints WHERE source=?", (source,)).fetchone()
@@ -310,6 +344,7 @@ class SQLiteStore:
         return {row["external_id"] for row in self.connection.execute("SELECT s.external_id FROM source_items s JOIN followed_processes f ON f.process_id=s.process_id WHERE s.source=?", (source,))}
 
     def is_followed(self, process_id: str) -> bool:
+        process_id = self.canonical_process_id(process_id)
         return bool(self.connection.execute("SELECT 1 FROM followed_processes WHERE process_id=?", (process_id,)).fetchone())
 
     def follow(self, prefix: str, enabled: bool = True) -> str:
@@ -319,12 +354,13 @@ class SQLiteStore:
         matches = self.connection.execute("SELECT id FROM processes WHERE id LIKE ?", (prefix + "%",)).fetchall()
         if len(matches) != 1:
             raise ValueError("ID no encontrado o ambiguo")
-        process_id = matches[0]["id"]
+        process_id = self.canonical_process_id(matches[0]["id"])
         with self.transaction() as db:
             if enabled:
                 db.execute("INSERT OR IGNORE INTO followed_processes VALUES (?,?)", (process_id, utc_now_iso()))
             else:
                 db.execute("DELETE FROM followed_processes WHERE process_id=?", (process_id,))
+                db.execute("DELETE FROM followed_processes WHERE process_id IN (SELECT alias_id FROM process_aliases WHERE process_id=?)", (process_id,))
         return process_id
 
     @contextmanager
@@ -391,7 +427,8 @@ class SQLiteStore:
             (candidate.source, candidate.source_id),
         ).fetchone()
         if row:
-            return row
+            canonical = self.canonical_process_id(row["id"])
+            return self.connection.execute("SELECT * FROM processes WHERE id=?", (canonical,)).fetchone()
 
         refs = normalized_references(candidate)
         if refs:

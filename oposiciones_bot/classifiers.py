@@ -347,7 +347,7 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
         allow_standalone=bool(candidate.qualification_text),
     )
     candidate.compatibility = Compatibility(evidence.value)
-    milestone_text = " ".join([text, *(link.label.replace("_", " ") for link in candidate.links)])
+    milestone_text = candidate.raw.get("current_milestone_text") or " ".join([text, *(link.label.replace("_", " ") for link in candidate.links)])
     candidate.status = infer_status(milestone_text)
     geo = geographic_match(candidate, config)
     candidate.priority = calculate_priority(candidate, config)

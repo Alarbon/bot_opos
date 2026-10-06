@@ -71,6 +71,7 @@ def collect(
     today: date,
 ) -> CollectionSummary:
     summary = CollectionSummary()
+    store.consolidate_document_folders()
     first_run = store.is_empty()
     lookback = int(config.get("collection.lookback_days", 10))
     bootstrap_days = int(config.get("collection.bootstrap_notify_days", 14))
