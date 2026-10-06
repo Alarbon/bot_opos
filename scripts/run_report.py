@@ -14,7 +14,7 @@ def create_report(metrics: dict, status: str, env: dict) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     return {
         "run_id": env.get("GITHUB_RUN_ID", ""),
-        "event": "schedule" if env.get("SEARCH_AUTOMATIC") == "true" else env.get("GITHUB_EVENT_NAME", ""),
+        "event": env.get("GITHUB_EVENT_NAME", ""),
         "url": f'https://github.com/{env.get("GITHUB_REPOSITORY", "")}/actions/runs/{env.get("GITHUB_RUN_ID", "")}',
         "status": status, "finished_at": now,
         "started_at": metrics.get("started_at"),

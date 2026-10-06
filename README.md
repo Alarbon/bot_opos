@@ -385,9 +385,8 @@ alertas de salud por Telegram. Las claves de umbral/enfriamiento presentes en
 ## GitHub Actions
 
 El workflow [`.github/workflows/oposiciones.yml`](.github/workflows/oposiciones.yml)
-se ejecuta a las `06:17`, `10:17`, `14:17` y `18:17` UTC, además de admitir
-`workflow_dispatch`. GitHub puede retrasar los cron y las horas locales cambian
-con el horario de verano.
+se ejecuta solo mediante `workflow_dispatch`: desde `/buscar` en Telegram o
+con Run workflow en GitHub. No hay disparadores por horario.
 
 ### Comandos desde Telegram
 
@@ -648,28 +647,23 @@ Los fallos se avisan si el runner alcanza el paso final y Telegram está disponi
 cancelaciones forzadas, fallo del propio runner o secretos inválidos pueden
 impedir el aviso. GitHub Actions sigue siendo la autoridad del resultado final.
 
-`/estado` muestra el origen manual/automático, fechas peninsulares, horario y
+`/estado` muestra el origen de la ejecución, fechas peninsulares, modo manual y
 estadísticas de `data/latest_run.json` solo si pertenecen a la ejecución actual.
 `scripts/publish_state.py` reintenta el guardado e integra commits concurrentes
 de código mediante rebase. Nunca fuerza un push ni sobrescribe cambios de estado
 remotos: si cambió la base, catálogo o informe, se detiene para revisión. Los
 workflows de búsqueda y seguimiento conservan su bloqueo compartido.
 
-Las búsquedas automáticas se programan todos los días a las **08:30, 12:30,
-17:30 y 21:00** en `Europe/Madrid` (España peninsular), tanto en verano como
-en invierno. GitHub Actions puede iniciar una ejecución con retraso.
-
-El horario pertenece a `automatico.yml` (Programador automatico), que inicia
-`oposiciones.yml` con `automatic=true`. Los comandos `/automatico_on`,
-`/automatico_off` y `/automatico_estado` habilitan, deshabilitan o consultan
-solo ese programador mediante el permiso Actions de GitHub ya utilizado.
-`/buscar` sigue funcionando; apagar no cancela ejecuciones ya iniciadas.
-Tras desplegar el Worker, `/ayuda` actualiza el menú clicable de Telegram.
+Modo exclusivamente manual: `/buscar` o Run workflow de GitHub inicia la
+consulta. No hay programador ni horario automático. Tras desplegar el Worker,
+`/ayuda` actualiza el menú de Telegram y elimina los antiguos interruptores.
+Los cambios y recordatorios de procesos seguidos se evalúan en cada búsqueda
+manual; sin ejecutar una búsqueda no habrá avisos nuevos en segundo plano.
 
 La búsqueda es incremental por fuente: desde la fecha de su última consulta
 correcta hasta hoy, incluyendo ambos días. Una consulta fallida no avanza el
 punto de control. La primera consulta usa los 10 días configurados. Las
-consultas manuales y programadas comparten esos puntos de control. Los
+consultas manuales comparten esos puntos de control. Los
 tablones sin archivo histórico solo permiten revisar lo que aún publican;
 una ventana de fechas no garantiza recuperar documentos retirados.
 Los registros seguidos en los tablones de Jaén se revisan aunque su fecha
