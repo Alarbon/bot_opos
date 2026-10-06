@@ -11,7 +11,7 @@ from ..enrichment import enrich_candidate
 from ..models import Candidate, SourceLink
 from ..normalization import clean_text, parse_date, stable_hash
 from ..parsers import html_to_text, pdf_to_text
-from ..process_groups import martos_process_folder
+from ..process_groups import martos_process_folder, document_milestone_date
 from .base import (
     FetchContext,
     SourceAdapter,
@@ -122,7 +122,7 @@ class GenericHTMLSource(SourceAdapter):
                 else:
                     others.append(candidate)
             for folder_id, documents in grouped.items():
-                documents.sort(key=lambda c: c.publication_date or "", reverse=True)
+                documents.sort(key=lambda c: document_milestone_date(c.title) or c.publication_date or "", reverse=True)
                 latest = documents[0]
                 _, title = martos_process_folder(latest.url)
                 # Forms and marking sheets are attachments, not qualification bases.
@@ -131,7 +131,7 @@ class GenericHTMLSource(SourceAdapter):
                     source=self.name, source_id=f"category-{folder_id}",
                     reference=f"MARTOS-CATEGORY-{folder_id}", title=title,
                     organisation=latest.organisation, url=latest.url,
-                    publication_date=latest.publication_date, province="Jaen", scope="Local",
+                    publication_date=latest.publication_date, locality="Martos", province="Jaen", scope="Local",
                     summary=f"{len(documents)} documentos de la misma convocatoria. Último documento: {latest.title}",
                     full_text="\n".join(c.full_text for c in bases),
                     links=[link for c in documents for link in c.links],

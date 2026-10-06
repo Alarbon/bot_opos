@@ -276,6 +276,7 @@ def infer_status(text: str) -> ProcessStatus:
         (("anulacion", "anulada", "dejar sin efecto"), ProcessStatus.CANCELLED),
         (("suspension", "suspendido", "suspendida"), ProcessStatus.SUSPENDED),
         (("reapertura", "nuevo plazo"), ProcessStatus.REOPENED),
+        (("propuesta de nombramiento",), ProcessStatus.APPOINTMENT_PROPOSED),
         (("eleccion de destinos", "destinos adjudicados"), ProcessStatus.DESTINATIONS),
         (("calificaciones", "relacion de aprobados", "notas definitivas", "notas segundo examen", "notas del segundo", "notas primer examen"), ProcessStatus.MARKS),
         (

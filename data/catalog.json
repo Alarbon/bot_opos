@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-10-06T18:19:46+00:00",
+  "generated_at": "2026-10-06T18:37:17+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
@@ -74,7 +74,7 @@
           "label": "Acta Tribunal Selección fase de Oposición (lectura de su ejercicio) de una Plaza de Ténico-a de Informática, de fecha 24 de noviembre de 2025, por el sistema de Concuros-Oposición y fecha de convocatoria para el segundo ejercicio (práctico) de la Fase de Oposición."
         }
       ],
-      "locality": "",
+      "locality": "Martos",
       "province": "Jaen",
       "scope": "Local",
       "group": "",
@@ -84,7 +84,7 @@
       "compatibility": "REVISAR",
       "deadline": null,
       "deadline_confirmed": false,
-      "status": "EXAMEN_ANUNCIADO",
+      "status": "PROPUESTA_NOMBRAMIENTO",
       "exam_date": null,
       "exam_time": null,
       "exam_place": "",
@@ -104,7 +104,7 @@
         "f374d54d-c62f-442e-af09-f2e3ce776120"
       ],
       "category": "TRACKING",
-      "review_reason": "las bases no confirman DAM/DAW/ASIR o familia informatica; grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
+      "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
       "last_seen": "2026-10-06T18:19:27+00:00",
       "last_changed": "2026-10-06T18:19:27+00:00",

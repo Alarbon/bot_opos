@@ -3,6 +3,17 @@ from datetime import date
 import pytest
 
 from oposiciones_bot.catalog import build_catalog
+from oposiciones_bot.classifiers import infer_status, can_apply
+from oposiciones_bot.models import ProcessStatus
+from oposiciones_bot.process_groups import document_milestone_date
+
+
+def test_proposal_is_not_enrolment_or_finished(candidate_factory):
+    label = "Acta de fecha 22 de diciembre de 2025 y propuesta de Nombramiento"
+    assert document_milestone_date(label) == "2025-12-22"
+    assert document_milestone_date("Acta sin fecha") == ""
+    assert infer_status(label) is ProcessStatus.APPOINTMENT_PROPOSED
+    assert not can_apply(candidate_factory(status=infer_status(label)), date(2026, 10, 6))
 
 
 def test_catalog_follow_is_explicit_and_persistent(store, candidate_factory, included_decision, app_config):

@@ -5,11 +5,11 @@ import json
 from datetime import date
 from pathlib import Path
 
-from .classifiers import can_apply, evaluate_candidate, reviewable
+from .classifiers import can_apply, evaluate_candidate, reviewable, infer_status
 from .config import AppConfig
 from .db import SQLiteStore
 from .normalization import utc_now_iso
-from .process_groups import martos_process_folder
+from .process_groups import martos_process_folder, document_milestone_date
 
 
 def build_catalog(store: SQLiteStore, config: AppConfig, today: date) -> dict:
@@ -32,6 +32,13 @@ def build_catalog(store: SQLiteStore, config: AppConfig, today: date) -> dict:
                         link = SourceLink(link.source, link.url, link.reference, document["title"])
                     links[link.url] = link
             candidate.links = list(links.values())
+            candidate.locality = "Martos"
+            candidate.province = "Jaen"
+            dated_links = [(document_milestone_date(link.label), link) for link in candidate.links]
+            dated_links = [(day, link) for day, link in dated_links if day]
+            if dated_links:
+                latest = max(dated_links, key=lambda item: item[0])[1]
+                candidate.status = infer_status(latest.label)
             candidate.summary = f"Documentos de una única convocatoria: {len(candidate.links)}. Consulta las bases y el último anuncio en los enlaces oficiales."
             if "fotocopia" in candidate.qualification_text.lower() or "titulacion requerida" in candidate.qualification_text.lower():
                 candidate.qualification_text = ""
@@ -44,7 +51,7 @@ def build_catalog(store: SQLiteStore, config: AppConfig, today: date) -> dict:
             continue
         applicable = can_apply(candidate, today)
         category = "OPEN" if decision.include and applicable else "REVIEW" if applicable or not candidate.deadline_confirmed else "TRACKING"
-        advanced = candidate.status.value in {"NOTAS", "EXAMEN_ANUNCIADO", "EXAMEN_REALIZADO", "ADMITIDOS_PROVISIONAL", "ADMITIDOS_DEFINITIVO", "DESTINOS", "FINALIZADA", "ANULADA", "SUSPENDIDA"}
+        advanced = candidate.status.value in {"NOTAS", "EXAMEN_ANUNCIADO", "EXAMEN_REALIZADO", "ADMITIDOS_PROVISIONAL", "ADMITIDOS_DEFINITIVO", "DESTINOS", "PROPUESTA_NOMBRAMIENTO", "FINALIZADA", "ANULADA", "SUSPENDIDA"}
         if advanced:
             category = "TRACKING"
         if excluded:
