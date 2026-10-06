@@ -1,10 +1,10 @@
 {
-  "run_id": "37522339513",
+  "run_id": "37522904396",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/37522339513",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/37522904396",
   "status": "success",
-  "finished_at": "2026-10-06T19:55:47.775853+00:00",
-  "started_at": "2026-10-06T21:54:16.692131+02:00",
+  "finished_at": "2026-10-06T20:00:25.846542+00:00",
+  "started_at": "2026-10-06T21:58:48.555335+02:00",
   "collection": {
     "sources_attempted": 10,
     "fetched": 21,
@@ -15,7 +15,7 @@
     "filtered": 15,
     "reminders": 0,
     "errors": {
-      "bop_jaen": "RuntimeError: BOP Jaen: ruta diaria: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses')); alternativa oficial: portada: RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many 500 error responses')); proxy privado: RetryError: HTTPSConnectionPool(host='oposiciones-telegram.alarbon98.workers.dev', port=443): Max retries exceeded with url: /bop/day/06-10-2026 (Caused by ResponseError('too many 502 error responses'))"
+      "bop_jaen": "RuntimeError: BOP Jaen: ruta diaria: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses')); alternativa oficial: portada: RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many 500 error responses')); proxy privado: HTTPError: 424 Client Error: Failed Dependency for url: https://oposiciones-telegram.alarbon98.workers.dev/bop/day/06-10-2026 (BOP_DEPENDENCY_STATUS_500)"
     }
   },
   "delivery": {
