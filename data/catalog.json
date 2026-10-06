@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-10-06T19:55:46+00:00",
+  "generated_at": "2026-10-06T20:00:21+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
@@ -106,7 +106,7 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T19:55:26+00:00",
+      "last_seen": "2026-10-06T20:00:01+00:00",
       "last_changed": "2026-10-06T19:10:02+00:00",
       "history": [
         {
@@ -122,70 +122,70 @@
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-10-06T19:55:28+00:00",
+      "started_at": "2026-10-06T20:00:03+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-10-06T19:54:53+00:00",
+      "started_at": "2026-10-06T19:59:26+00:00",
       "status": "OK",
       "items_found": 2,
       "error": ""
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-10-06T19:55:26+00:00",
+      "started_at": "2026-10-06T20:00:01+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "boe",
-      "started_at": "2026-10-06T19:54:24+00:00",
+      "started_at": "2026-10-06T19:58:57+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "boja",
-      "started_at": "2026-10-06T19:54:25+00:00",
+      "started_at": "2026-10-06T19:58:59+00:00",
       "status": "OK",
       "items_found": 8,
       "error": ""
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-10-06T19:54:28+00:00",
+      "started_at": "2026-10-06T19:59:02+00:00",
       "status": "ERROR",
       "items_found": 0,
-      "error": "RuntimeError: BOP Jaen: ruta diaria: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses')); alternativa oficial: portada: RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many 500 error responses')); proxy privado: RetryError: HTTPSConnectionPool(host='oposiciones-telegram.alarbon98.workers.dev', port=443): Max retries exceeded with url: /bop/day/06-10-2026 (Caused by ResponseError('too many 502 error responses'))"
+      "error": "RuntimeError: BOP Jaen: ruta diaria: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses')); alternativa oficial: portada: RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many 500 error responses')); proxy privado: HTTPError: 424 Client Error: Failed Dependency for url: https://oposiciones-telegram.alarbon98.workers.dev/bop/day/06-10-2026 (BOP_DEPENDENCY_STATUS_500)"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-10-06T19:55:39+00:00",
+      "started_at": "2026-10-06T20:00:17+00:00",
       "status": "OK",
       "items_found": 3,
       "error": ""
     },
     {
       "source": "iaap",
-      "started_at": "2026-10-06T19:54:47+00:00",
+      "started_at": "2026-10-06T19:59:20+00:00",
       "status": "OK",
       "items_found": 5,
       "error": ""
     },
     {
       "source": "sas",
-      "started_at": "2026-10-06T19:54:16+00:00",
+      "started_at": "2026-10-06T19:58:48+00:00",
       "status": "OK",
       "items_found": 1,
       "error": ""
     },
     {
       "source": "universidad_jaen",
-      "started_at": "2026-10-06T19:55:41+00:00",
+      "started_at": "2026-10-06T20:00:19+00:00",
       "status": "OK",
       "items_found": 2,
       "error": ""
