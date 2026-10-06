@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-10-06T17:52:12+00:00",
+  "generated_at": "2026-10-06T18:01:52+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
@@ -40,7 +40,7 @@
       "category": "TRACKING",
       "review_reason": "las bases no confirman DAM/DAW/ASIR o familia informatica; grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T17:42:48+00:00",
+      "last_seen": "2026-10-06T18:01:34+00:00",
       "last_changed": "2026-10-06T17:37:40+00:00",
       "history": []
     },
@@ -82,7 +82,7 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1)",
       "followed": false,
-      "last_seen": "2026-10-06T17:42:48+00:00",
+      "last_seen": "2026-10-06T18:01:34+00:00",
       "last_changed": "2026-10-06T17:37:40+00:00",
       "history": []
     },
@@ -124,7 +124,7 @@
       "category": "TRACKING",
       "review_reason": "las bases no confirman DAM/DAW/ASIR o familia informatica; grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T17:42:48+00:00",
+      "last_seen": "2026-10-06T18:01:34+00:00",
       "last_changed": "2026-10-06T17:37:40+00:00",
       "history": []
     },
@@ -166,7 +166,7 @@
       "category": "TRACKING",
       "review_reason": "las bases no confirman DAM/DAW/ASIR o familia informatica; grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T17:42:48+00:00",
+      "last_seen": "2026-10-06T18:01:34+00:00",
       "last_changed": "2026-10-06T17:37:40+00:00",
       "history": []
     },
@@ -208,7 +208,7 @@
       "category": "TRACKING",
       "review_reason": "las bases no confirman DAM/DAW/ASIR o familia informatica; grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T17:42:48+00:00",
+      "last_seen": "2026-10-06T18:01:34+00:00",
       "last_changed": "2026-10-06T17:37:40+00:00",
       "history": []
     },
@@ -250,7 +250,7 @@
       "category": "TRACKING",
       "review_reason": "las bases no confirman DAM/DAW/ASIR o familia informatica; grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-06T17:42:48+00:00",
+      "last_seen": "2026-10-06T18:01:34+00:00",
       "last_changed": "2026-10-06T17:37:40+00:00",
       "history": []
     }
@@ -258,63 +258,70 @@
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-10-06T17:42:50+00:00",
+      "started_at": "2026-10-06T18:01:36+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-10-06T17:42:17+00:00",
+      "started_at": "2026-10-06T18:01:01+00:00",
       "status": "OK",
       "items_found": 19,
       "error": ""
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-10-06T17:42:48+00:00",
+      "started_at": "2026-10-06T18:01:34+00:00",
       "status": "OK",
       "items_found": 0,
       "error": ""
     },
     {
       "source": "boe",
-      "started_at": "2026-10-06T17:41:53+00:00",
+      "started_at": "2026-10-06T18:00:45+00:00",
       "status": "OK",
-      "items_found": 1,
+      "items_found": 0,
       "error": ""
     },
     {
       "source": "boja",
-      "started_at": "2026-10-06T17:41:55+00:00",
+      "started_at": "2026-10-06T18:00:46+00:00",
       "status": "OK",
-      "items_found": 46,
+      "items_found": 8,
       "error": ""
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-10-06T17:42:06+00:00",
+      "started_at": "2026-10-06T18:00:49+00:00",
       "status": "ERROR",
       "items_found": 0,
       "error": "RetryError: HTTPSConnectionPool(host='bop.dipujaen.es', port=443): Max retries exceeded with url: /bop/06-10-2026 (Caused by ResponseError('too many 500 error responses'))"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-10-06T17:43:01+00:00",
+      "started_at": "2026-10-06T18:01:46+00:00",
       "status": "OK",
       "items_found": 3,
       "error": ""
     },
     {
       "source": "iaap",
-      "started_at": "2026-10-06T17:42:12+00:00",
+      "started_at": "2026-10-06T18:00:56+00:00",
       "status": "OK",
       "items_found": 5,
       "error": ""
     },
     {
+      "source": "sas",
+      "started_at": "2026-10-06T18:00:39+00:00",
+      "status": "OK",
+      "items_found": 1,
+      "error": ""
+    },
+    {
       "source": "universidad_jaen",
-      "started_at": "2026-10-06T17:43:04+00:00",
+      "started_at": "2026-10-06T18:01:48+00:00",
       "status": "OK",
       "items_found": 2,
       "error": ""
