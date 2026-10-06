@@ -1,0 +1,12 @@
+from pathlib import Path
+
+import yaml
+
+
+def test_daily_search_keeps_spanish_local_hours():
+    path = Path(__file__).resolve().parents[1] / ".github/workflows/oposiciones.yml"
+    # BaseLoader keeps YAML 1.1's "on" key as a string, like GitHub's parser.
+    workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    assert workflow["on"]["schedule"] == [
+        {"cron": "30 8,12,17,20 * * *", "timezone": "Europe/Madrid"}
+    ]

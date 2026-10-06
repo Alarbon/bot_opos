@@ -2,9 +2,9 @@ name: Buscar oposiciones
 
 on:
   schedule:
-    # GitHub usa UTC. Minuto 17 evita el pico de la hora; en Espana las horas
-    # locales varian una hora con el horario de verano.
-    - cron: "17 6,10,14,18 * * *"
+    # Horas peninsulares fijas, con ajuste automatico de verano/invierno.
+    - cron: "30 8,12,17,20 * * *"
+      timezone: "Europe/Madrid"
   workflow_dispatch:
     inputs:
       dry_run:

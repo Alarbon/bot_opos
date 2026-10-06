@@ -638,6 +638,10 @@ de B/C1, exigencia universitaria y puestos no informáticos siguen excluidos.
 
 ## Consulta y seguimiento desde Telegram
 
+Las búsquedas automáticas se programan todos los días a las **08:30, 12:30,
+17:30 y 20:30** en `Europe/Madrid` (España peninsular), tanto en verano como
+en invierno. GitHub Actions puede iniciar una ejecución con retraso.
+
 La búsqueda es incremental por fuente: desde la fecha de su última consulta
 correcta hasta hoy, incluyendo ambos días. Una consulta fallida no avanza el
 punto de control. La primera consulta usa los 10 días configurados. Las
