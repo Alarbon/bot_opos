@@ -1,0 +1,11 @@
+{
+  "name": "oposiciones-telegram-worker",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "undici": "8.11.2",
+    "wrangler": "4.147.0"
+  }
+}
