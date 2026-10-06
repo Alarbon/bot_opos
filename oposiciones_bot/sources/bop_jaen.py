@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import timedelta
+from datetime import date, timedelta
 from urllib.parse import parse_qs, urljoin, urlparse
 
 from bs4 import BeautifulSoup
@@ -26,13 +26,34 @@ class BOPJaenSource(SourceAdapter):
     name = "bop_jaen"
     endpoint = "https://bop.dipujaen.es/bop/{date}"
 
+    def _daily_html(self, page_url: str, day: date) -> str:
+        try:
+            return self.client.get_text(page_url)
+        except Exception as original:
+            # The home page is another official route to the latest bulletin.
+            # Never substitute a different date for a failed historical day.
+            try:
+                html = self.client.get_text("https://bop.dipujaen.es/")
+                soup = BeautifulSoup(html, "lxml")
+                dates = {
+                    value
+                    for anchor in soup.select("article a[href]")
+                    for value in parse_qs(urlparse(anchor["href"]).query).get("fechaBoletin", [])
+                }
+                if dates == {day.isoformat()}:
+                    LOGGER.warning("BOP Jaen: recuperado %s mediante portada oficial", day)
+                    return html
+            except Exception:
+                pass
+            raise original
+
     def fetch(self, context: FetchContext) -> list[Candidate]:
         candidates: list[Candidate] = []
         for offset in range(context.lookback_days + 1):
             day = context.today - timedelta(days=offset)
             page_url = self.endpoint.format(date=day.strftime("%d-%m-%Y"))
             try:
-                html = self.client.get_text(page_url)
+                html = self._daily_html(page_url, day)
             except Exception as exc:
                 status = getattr(getattr(exc, "response", None), "status_code", None)
                 if status == 404:

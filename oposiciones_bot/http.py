@@ -66,7 +66,12 @@ class HttpClient:
 
     def get_text(self, url: str, **kwargs: Any) -> str:
         response = self.get(url, **kwargs)
-        if not response.encoding or response.encoding.lower() == "iso-8859-1":
+        # Requests defaults to Latin-1 for unlabelled HTML, but an explicit
+        # server charset (as used by BOP Jaen) must not be guessed away.
+        content_type = response.headers.get("Content-Type", "").lower()
+        if not response.encoding or (
+            response.encoding.lower() == "iso-8859-1" and "charset=" not in content_type
+        ):
             response.encoding = response.apparent_encoding or "utf-8"
         return response.text
 
