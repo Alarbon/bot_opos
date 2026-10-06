@@ -83,6 +83,9 @@ sources:
   bop_jaen:
     enabled: true
     kind: bop_jaen
+    # GitHub es rechazado por el servidor del BOP; el Worker privado actúa
+    # como transporte autenticado y conserva siempre los enlaces oficiales.
+    proxy_base_url: "https://oposiciones-telegram.alarbon98.workers.dev"
   iaap:
     enabled: true
     kind: html

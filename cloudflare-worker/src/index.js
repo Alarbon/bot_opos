@@ -1,5 +1,8 @@
 const TELEGRAM_API = "https://api.telegram.org";
 const GITHUB_API = "https://api.github.com";
+const BOP_ORIGIN = "https://bop.dipujaen.es";
+const BOP_DAY_MAX_BYTES = 2_000_000;
+const BOP_DOCUMENT_MAX_BYTES = 15_000_000;
 
 function textResponse(text, status = 200) {
   return new Response(text, {
@@ -12,6 +15,165 @@ function required(env, name) {
   const value = String(env[name] || "").trim();
   if (!value) throw new Error(`Falta la variable ${name}`);
   return value;
+}
+
+function bopProxySecret(env) {
+  return String(env.BOP_PROXY_TOKEN || env.TELEGRAM_BOT_TOKEN || "").trim();
+}
+
+function parseBopDate(value) {
+  const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(value);
+  if (!match) return null;
+  const [, dayText, monthText, yearText] = match;
+  const day = Number(dayText);
+  const month = Number(monthText);
+  const year = Number(yearText);
+  const instant = Date.UTC(year, month - 1, day);
+  const parsed = new Date(instant);
+  if (
+    parsed.getUTCFullYear() !== year
+    || parsed.getUTCMonth() !== month - 1
+    || parsed.getUTCDate() !== day
+  ) return null;
+
+  // The collector only asks for the current incremental window.  Limiting the
+  // range prevents this private endpoint from becoming a general BOP mirror.
+  const ageDays = Math.floor((Date.now() - instant) / 86_400_000);
+  if (ageDays < -2 || ageDays > 45) return null;
+  return {
+    pathDate: value,
+    isoDate: `${yearText}-${monthText}-${dayText}`,
+    ageDays,
+  };
+}
+
+function bopResponse(body, status, contentType = "text/plain; charset=utf-8") {
+  return new Response(body, {
+    status,
+    headers: {
+      "content-type": contentType,
+      "cache-control": "private, max-age=0, no-store",
+      "x-bop-proxy": "1",
+      "x-content-type-options": "nosniff",
+    },
+  });
+}
+
+function validUpstream(response, expectedType, maxBytes) {
+  if (response.status >= 300 && response.status < 400) return false;
+  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+  if (!contentType.includes(expectedType)) return false;
+  const contentLength = Number(response.headers.get("content-length") || 0);
+  return !contentLength || contentLength <= maxBytes;
+}
+
+function bopDayLinks(html, day) {
+  const links = [];
+  const hrefs = [...html.matchAll(/<a\b[^>]*\bhref\s*=\s*(["'])(.*?)\1/giu)]
+    .map(match => match[2].replaceAll("&amp;", "&"));
+  for (const href of hrefs) {
+    let candidate;
+    try { candidate = new URL(href, BOP_ORIGIN); } catch { continue; }
+    if (
+      candidate.origin === BOP_ORIGIN
+      && candidate.pathname === "/descargarws.dip"
+      && candidate.searchParams.get("fechaBoletin") === day.isoDate
+      && /^\d{1,10}$/.test(candidate.searchParams.get("numeroEdicto") || "")
+    ) links.push(candidate);
+  }
+  return links;
+}
+
+function validEmptyBopDay(html, day) {
+  const normalized = html.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  return normalized.includes(`no hay ningun boletin publicado para el dia ${day.pathDate}`);
+}
+
+async function fetchBopDay(day) {
+  return fetch(`${BOP_ORIGIN}/bop/${day.pathDate}`, {
+    method: "GET",
+    headers: {
+      accept: "text/html,application/xhtml+xml",
+      "accept-language": "es-ES,es;q=0.9",
+      "user-agent": "oposiciones-telegram-worker/1.0",
+    },
+    redirect: "manual",
+    cf: { cacheEverything: true, cacheTtl: day.ageDays > 0 ? 86400 : 300 },
+  });
+}
+
+async function handleBopProxy(request, env, url) {
+  if (request.method !== "GET") return bopResponse("method not allowed", 405);
+  const secret = bopProxySecret(env);
+  const authorization = request.headers.get("authorization") || "";
+  if (!secret || authorization !== `Bearer ${secret}`) return bopResponse("unauthorized", 401);
+
+  const dayMatch = /^\/bop\/day\/(\d{2}-\d{2}-\d{4})$/.exec(url.pathname);
+  const edictMatch = /^\/bop\/edict\/(\d{2}-\d{2}-\d{4})\/(\d{1,10})$/.exec(url.pathname);
+  if (!dayMatch && !edictMatch) return bopResponse("not found", 404);
+
+  const day = parseBopDate((dayMatch || edictMatch)[1]);
+  if (!day) return bopResponse("invalid or out-of-range date", 400);
+
+  let dayResponse;
+  try {
+    dayResponse = await fetchBopDay(day);
+  } catch (error) {
+    console.error("BOP day fetch failed", error);
+    return bopResponse("BOP upstream unavailable", 504);
+  }
+  if (dayResponse.status === 404) {
+    // A missing bulletin is a valid, covered day (weekends and holidays).
+    return bopResponse(null, 204);
+  }
+  if (!dayResponse.ok || !validUpstream(dayResponse, "text/html", BOP_DAY_MAX_BYTES)) {
+    return bopResponse("invalid BOP day response", 502);
+  }
+
+  const dayBytes = await dayResponse.arrayBuffer();
+  if (dayBytes.byteLength > BOP_DAY_MAX_BYTES) {
+    return bopResponse("BOP day response too large", 502);
+  }
+  const html = new TextDecoder("windows-1252").decode(dayBytes);
+  const officialLinks = bopDayLinks(html, day);
+  if (!officialLinks.length && !validEmptyBopDay(html, day)) {
+    return bopResponse("unrecognized BOP day response", 502);
+  }
+
+  if (dayMatch) {
+    return bopResponse(
+      dayBytes,
+      200,
+      dayResponse.headers.get("content-type") || "text/html; charset=iso-8859-1",
+    );
+  }
+
+  const edict = edictMatch[2];
+  const documentUrl = officialLinks.find(
+    candidate => candidate.searchParams.get("numeroEdicto") === edict,
+  );
+  if (!documentUrl) return bopResponse("edict not found in bulletin", 404);
+
+  let documentResponse;
+  try {
+    documentResponse = await fetch(documentUrl.toString(), {
+      method: "GET",
+      headers: {
+        accept: "application/pdf",
+        "accept-language": "es-ES,es;q=0.9",
+        "user-agent": "oposiciones-telegram-worker/1.0",
+      },
+      redirect: "manual",
+      cf: { cacheEverything: true, cacheTtl: day.ageDays > 0 ? 86400 : 300 },
+    });
+  } catch (error) {
+    console.error("BOP document fetch failed", error);
+    return bopResponse("BOP document unavailable", 504);
+  }
+  if (!documentResponse.ok || !validUpstream(documentResponse, "application/pdf", BOP_DOCUMENT_MAX_BYTES)) {
+    return bopResponse("invalid BOP document response", 502);
+  }
+  return bopResponse(documentResponse.body, 200, "application/pdf");
 }
 
 async function telegram(env, method, payload) {
@@ -283,6 +445,10 @@ export default {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
       return textResponse("ok");
+    }
+
+    if (url.pathname.startsWith("/bop/")) {
+      return handleBopProxy(request, env, url);
     }
 
     if (request.method === "POST" && url.pathname === "/admin/configure") {

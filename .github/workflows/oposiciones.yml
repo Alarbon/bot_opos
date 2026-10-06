@@ -45,11 +45,17 @@ jobs:
 
       - name: Dry run
         if: ${{ inputs.dry_run == true }}
+        env:
+          BOP_PROXY_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: python main.py run --dry-run
 
       - name: Collect and enqueue
         id: collect
         if: ${{ inputs.dry_run != true }}
+        env:
+          # El mismo secreto ya existe en GitHub y Cloudflare. Nunca se pasa
+          # al BOP ni se escribe en logs; solo autentica el proxy privado.
+          BOP_PROXY_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: python main.py run --collect-only --metrics-file data/run_metrics.json
 
       - name: Persist collected state

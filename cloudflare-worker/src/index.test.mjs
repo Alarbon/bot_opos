@@ -4,6 +4,141 @@ import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("./index.js", import.meta.url), "utf8");
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 
+function currentBopDate(offsetDays = 0) {
+  const value = new Date(Date.now() - offsetDays * 86_400_000);
+  const day = String(value.getUTCDate()).padStart(2, "0");
+  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+  return {
+    path: `${day}-${month}-${value.getUTCFullYear()}`,
+    iso: `${value.getUTCFullYear()}-${month}-${day}`,
+  };
+}
+
+function officialDayHtml(day, edict = "4696") {
+  return `<article><a href="https://bop.dipujaen.es/descargarws.dip?fechaBoletin=${day.iso}&amp;numeroEdicto=${edict}&amp;tipo=bop">PDF</a></article>`;
+}
+
+test("BOP proxy requires authentication before contacting the origin", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response("unexpected"); };
+  try {
+    const day = currentBopDate();
+    const response = await worker.fetch(
+      new Request(`https://example.com/bop/day/${day.path}`),
+      { TELEGRAM_BOT_TOKEN: "private-token" },
+      {},
+    );
+    assert.equal(response.status, 401);
+    assert.equal(calls, 0);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("BOP day proxy returns the official HTML with its charset", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  const day = currentBopDate();
+  globalThis.fetch = async (url, options) => {
+    calls.push([url, options]);
+    return new Response(officialDayHtml(day), {
+      status: 200,
+      headers: { "content-type": "text/html; charset=iso-8859-1" },
+    });
+  };
+  try {
+    const response = await worker.fetch(
+      new Request(`https://example.com/bop/day/${day.path}`, { headers: { authorization: "Bearer private-token" } }),
+      { TELEGRAM_BOT_TOKEN: "private-token" },
+      {},
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("x-bop-proxy"), "1");
+    assert.match(response.headers.get("content-type"), /iso-8859-1/);
+    assert.equal(await response.text(), officialDayHtml(day));
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], `https://bop.dipujaen.es/bop/${day.path}`);
+    assert.equal(calls[0][1].redirect, "manual");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("BOP edict proxy only downloads a document listed by the official day", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  const day = currentBopDate();
+  globalThis.fetch = async (url, options) => {
+    calls.push([url, options]);
+    if (calls.length === 1) {
+      return new Response(officialDayHtml(day), {
+        status: 200,
+        headers: { "content-type": "text/html; charset=iso-8859-1" },
+      });
+    }
+    return new Response("%PDF-safe", {
+      status: 200,
+      headers: { "content-type": "application/pdf", "content-length": "9" },
+    });
+  };
+  try {
+    const response = await worker.fetch(
+      new Request(`https://example.com/bop/edict/${day.path}/4696`, { headers: { authorization: "Bearer private-token" } }),
+      { TELEGRAM_BOT_TOKEN: "private-token" },
+      {},
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "application/pdf");
+    assert.equal(await response.text(), "%PDF-safe");
+    assert.equal(calls.length, 2);
+    const downloaded = new URL(calls[1][0]);
+    assert.equal(downloaded.origin, "https://bop.dipujaen.es");
+    assert.equal(downloaded.pathname, "/descargarws.dip");
+    assert.equal(downloaded.searchParams.get("numeroEdicto"), "4696");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("BOP proxy rejects invalid dates, unknown edicts and invalid upstream types", async () => {
+  const originalFetch = globalThis.fetch;
+  let mode = "unknown-edict";
+  const day = currentBopDate();
+  globalThis.fetch = async () => {
+    if (mode === "unknown-edict") {
+      return new Response(officialDayHtml(day, "1234"), { status: 200, headers: { "content-type": "text/html" } });
+    }
+    return new Response("not html", { status: 200, headers: { "content-type": "text/plain" } });
+  };
+  try {
+    const headers = { authorization: "Bearer private-token" };
+    const invalid = await worker.fetch(new Request("https://example.com/bop/day/31-02-2026", { headers }), { TELEGRAM_BOT_TOKEN: "private-token" }, {});
+    assert.equal(invalid.status, 400);
+
+    const missing = await worker.fetch(new Request(`https://example.com/bop/edict/${day.path}/9999`, { headers }), { TELEGRAM_BOT_TOKEN: "private-token" }, {});
+    assert.equal(missing.status, 404);
+
+    mode = "wrong-type";
+    const wrongType = await worker.fetch(new Request(`https://example.com/bop/day/${day.path}`, { headers }), { TELEGRAM_BOT_TOKEN: "private-token" }, {});
+    assert.equal(wrongType.status, 502);
+
+    mode = "waf-html";
+    globalThis.fetch = async () => new Response("<html><h1>Error temporal</h1></html>", { status: 200, headers: { "content-type": "text/html" } });
+    const unrecognized = await worker.fetch(new Request(`https://example.com/bop/day/${day.path}`, { headers }), { TELEGRAM_BOT_TOKEN: "private-token" }, {});
+    assert.equal(unrecognized.status, 502);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("BOP proxy represents an official missing day as covered", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(null, { status: 404 });
+  try {
+    const day = currentBopDate();
+    const response = await worker.fetch(
+      new Request(`https://example.com/bop/day/${day.path}`, { headers: { authorization: "Bearer private-token" } }),
+      { TELEGRAM_BOT_TOKEN: "private-token" },
+      {},
+    );
+    assert.equal(response.status, 204);
+    assert.equal(response.headers.get("x-bop-proxy"), "1");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 for (const [command, action] of [["/automatico_on", "enable"], ["/automatico_off", "disable"], ["/automatico_estado", null]]) {
   test(`removed automatic command ${command} does not mutate GitHub`, async () => {
     const original = globalThis.fetch;

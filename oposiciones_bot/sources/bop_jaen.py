@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 from datetime import date, timedelta
-from urllib.parse import parse_qs, urljoin, urlparse
+from urllib.parse import parse_qs, quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup
 
 from ..enrichment import enrich_candidate
 from ..models import Candidate, SourceLink
-from ..normalization import clean_text
+from ..normalization import clean_text, normalize_text
 from ..parsers import pdf_to_text
 from .base import (
     FetchContext,
@@ -26,7 +27,40 @@ class BOPJaenSource(SourceAdapter):
     name = "bop_jaen"
     endpoint = "https://bop.dipujaen.es/bop/{date}"
 
+    def _proxy_headers(self) -> dict[str, str]:
+        token = getattr(self, "_proxy_token", "")
+        return {"Authorization": f"Bearer {token}"} if token else {}
+
+    def _proxy_day_url(self, day: date) -> str:
+        base = getattr(self, "_proxy_base_url", "").rstrip("/")
+        return f"{base}/bop/day/{day.strftime('%d-%m-%Y')}"
+
+    def _proxy_document_url(self, day: date, edict: str) -> str:
+        base = getattr(self, "_proxy_base_url", "").rstrip("/")
+        return f"{base}/bop/edict/{day.strftime('%d-%m-%Y')}/{quote(edict, safe='')}"
+
+    def _proxy_ready(self) -> bool:
+        return bool(
+            getattr(self, "_proxy_base_url", "")
+            and getattr(self, "_proxy_token", "")
+        )
+
     def _daily_html(self, page_url: str, day: date) -> str:
+        proxy_error: Exception | None = None
+        if self._proxy_ready():
+            try:
+                html = self.client.get_text(
+                    self._proxy_day_url(day), headers=self._proxy_headers()
+                )
+                LOGGER.info("BOP Jaen: recuperado %s mediante proxy privado", day)
+                return html
+            except Exception as exc:
+                proxy_error = exc
+                LOGGER.warning(
+                    "BOP Jaen: proxy no disponible para %s; se prueba el origen: %s",
+                    day,
+                    exc,
+                )
         try:
             return self.client.get_text(page_url)
         except Exception as original:
@@ -48,9 +82,44 @@ class BOPJaenSource(SourceAdapter):
                     return html
             except Exception as fallback:
                 fallback_detail = f"portada: {type(fallback).__name__}: {fallback}"
-            raise RuntimeError(f"BOP Jaen: ruta diaria: {original}; alternativa oficial: {fallback_detail}") from original
+            proxy_detail = (
+                f"; proxy privado: {type(proxy_error).__name__}: {proxy_error}"
+                if proxy_error
+                else ""
+            )
+            raise RuntimeError(
+                f"BOP Jaen: ruta diaria: {original}; alternativa oficial: "
+                f"{fallback_detail}{proxy_detail}"
+            ) from original
+
+    def _document_bytes(self, official_url: str, day: date, edict: str) -> bytes:
+        proxy_error: Exception | None = None
+        if self._proxy_ready() and edict.isdigit():
+            try:
+                return self.client.get_bytes(
+                    self._proxy_document_url(day, edict),
+                    headers=self._proxy_headers(),
+                )
+            except Exception as exc:
+                proxy_error = exc
+                LOGGER.warning(
+                    "BOP Jaen: proxy de documento no disponible para %s: %s",
+                    edict,
+                    exc,
+                )
+        try:
+            return self.client.get_bytes(official_url)
+        except Exception as original:
+            if proxy_error:
+                raise RuntimeError(
+                    "BOP Jaen: no se pudo descargar el edicto por el origen ni "
+                    f"por el proxy ({proxy_error})"
+                ) from original
+            raise
 
     def fetch(self, context: FetchContext) -> list[Candidate]:
+        self._proxy_base_url = str(context.source_config.get("proxy_base_url", "")).strip()
+        self._proxy_token = os.environ.get("BOP_PROXY_TOKEN", "").strip()
         candidates: list[Candidate] = []
         for offset in range(context.lookback_days + 1):
             day = context.today - timedelta(days=offset)
@@ -62,6 +131,11 @@ class BOPJaenSource(SourceAdapter):
                 if status == 404:
                     continue
                 raise
+            if not self._valid_daily_html(html, day):
+                raise RuntimeError(
+                    "BOP Jaen: la respuesta no contiene el boletin solicitado "
+                    f"ni confirma que no hubo publicacion el {day.isoformat()}"
+                )
             soup = BeautifulSoup(html, "lxml")
             for article in soup.find_all("article"):
                 description_node = article.select_one(".edicto")
@@ -80,7 +154,9 @@ class BOPJaenSource(SourceAdapter):
                 full_text = ""
                 if context.app_config.get("collection.fetch_document_text", True):
                     try:
-                        full_text = pdf_to_text(self.client.get_bytes(pdf_url))
+                        full_text = pdf_to_text(
+                            self._document_bytes(pdf_url, day, edict)
+                        )
                     except Exception as exc:
                         LOGGER.warning("BOP Jaen: no se pudo extraer %s: %s", source_id, exc)
                 candidate = Candidate(
@@ -101,6 +177,30 @@ class BOPJaenSource(SourceAdapter):
                 )
                 candidates.append(enrich_candidate(candidate))
         return candidates
+
+    @staticmethod
+    def _valid_daily_html(html: str, day: date) -> bool:
+        # The authenticated proxy uses HTTP 204 (and therefore an empty body)
+        # when the official origin returns 404 for a non-publication day.
+        if not html:
+            return True
+        soup = BeautifulSoup(html, "lxml")
+        for anchor in soup.select("article a[href]"):
+            target = urlparse(urljoin(BOPJaenSource.endpoint, anchor["href"]))
+            query = parse_qs(target.query)
+            if (
+                target.netloc == "bop.dipujaen.es"
+                and target.path == "/descargarws.dip"
+                and query.get("fechaBoletin") == [day.isoformat()]
+                and (query.get("numeroEdicto") or [""])[0].isdigit()
+            ):
+                return True
+        page_text = normalize_text(soup.get_text(" ", strip=True))
+        expected = normalize_text(
+            "No hay ningun boletin publicado para el dia "
+            f"{day.strftime('%d-%m-%Y')}"
+        )
+        return expected in page_text
 
     @staticmethod
     def _organisation(article: object) -> str:
