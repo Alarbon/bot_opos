@@ -18,6 +18,7 @@ from .base import (
     has_it_signal,
     has_public_job_signal,
 )
+from .bop_jaen_archive import ArchiveWindowStatus, BOPJaenArchive
 
 
 LOGGER = logging.getLogger(__name__)
@@ -55,7 +56,6 @@ class BOPJaenSource(SourceAdapter):
         )
 
     def _daily_html(self, page_url: str, day: date) -> str:
-        proxy_error: Exception | None = None
         if self._proxy_ready():
             try:
                 html = self.client.get_text(
@@ -64,12 +64,14 @@ class BOPJaenSource(SourceAdapter):
                 LOGGER.info("BOP Jaen: recuperado %s mediante proxy privado", day)
                 return html
             except Exception as exc:
-                proxy_error = exc
-                LOGGER.warning(
-                    "BOP Jaen: proxy no disponible para %s; se prueba el origen: %s",
-                    day,
-                    exc,
-                )
+                # GitHub Actions cannot reach the live BOP origin either.  If
+                # the configured cloud transport fails, trying the same origin
+                # directly only adds several HTTP retries before reaching the
+                # official historical fallback.
+                raise RuntimeError(
+                    "BOP Jaen: proxy del sitio actual no disponible: "
+                    f"{self._request_error(exc)}"
+                ) from exc
         try:
             return self.client.get_text(page_url)
         except Exception as original:
@@ -91,14 +93,9 @@ class BOPJaenSource(SourceAdapter):
                     return html
             except Exception as fallback:
                 fallback_detail = f"portada: {type(fallback).__name__}: {fallback}"
-            proxy_detail = (
-                f"; proxy privado: {self._request_error(proxy_error)}"
-                if proxy_error
-                else ""
-            )
             raise RuntimeError(
                 f"BOP Jaen: ruta diaria: {original}; alternativa oficial: "
-                f"{fallback_detail}{proxy_detail}"
+                f"{fallback_detail}"
             ) from original
 
     def _document_bytes(self, official_url: str, day: date, edict: str) -> bytes:
@@ -126,9 +123,7 @@ class BOPJaenSource(SourceAdapter):
                 ) from original
             raise
 
-    def fetch(self, context: FetchContext) -> list[Candidate]:
-        self._proxy_base_url = str(context.source_config.get("proxy_base_url", "")).strip()
-        self._proxy_token = os.environ.get("BOP_PROXY_TOKEN", "").strip()
+    def _fetch_current_site(self, context: FetchContext) -> list[Candidate]:
         candidates: list[Candidate] = []
         for offset in range(context.lookback_days + 1):
             day = context.today - timedelta(days=offset)
@@ -185,6 +180,46 @@ class BOPJaenSource(SourceAdapter):
                     raw={"bulletin_url": page_url, "edict": edict},
                 )
                 candidates.append(enrich_candidate(candidate))
+        return candidates
+
+    def fetch(self, context: FetchContext) -> list[Candidate]:
+        self._proxy_base_url = str(context.source_config.get("proxy_base_url", "")).strip()
+        self._proxy_token = os.environ.get("BOP_PROXY_TOKEN", "").strip()
+        self.covered_through = None
+        self.coverage_warning = None
+
+        try:
+            candidates = self._fetch_current_site(context)
+        except Exception as current_error:
+            LOGGER.warning(
+                "BOP Jaen: el sitio actual no es accesible; se usa el historico "
+                "oficial: %s",
+                current_error,
+            )
+            archive = BOPJaenArchive(self.client).fetch_window(context)
+            self.covered_through = archive.covered_through
+            if archive.status is ArchiveWindowStatus.LAGGING:
+                self.coverage_warning = (
+                    "BOP de Jaén: archivo oficial disponible hasta "
+                    f"{archive.covered_through.isoformat()}; "
+                    f"{archive.requested_end.isoformat()} pendiente de indexación"
+                )
+            elif archive.status is ArchiveWindowStatus.EMPTY:
+                self.coverage_warning = (
+                    "BOP de Jaén: el archivo oficial no devolvió ejemplares en "
+                    f"{archive.requested_start.isoformat()}–"
+                    f"{archive.requested_end.isoformat()}; no se acredita todavía "
+                    "la cobertura de ese intervalo"
+                )
+            LOGGER.info(
+                "BOP Jaen: historico oficial %s, %s ejemplares y %s candidatos",
+                archive.status.value,
+                len(archive.bulletins),
+                len(archive.candidates),
+            )
+            return archive.candidates
+
+        self.covered_through = context.today
         return candidates
 
     @staticmethod

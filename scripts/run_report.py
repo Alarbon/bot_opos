@@ -28,20 +28,25 @@ def render_report(report: dict) -> str:
     failed = report["status"] != "success"
     collection = report.get("collection")
     errors = (collection or {}).get("errors", {})
+    warnings = (collection or {}).get("warnings", {})
     delivery_problem = any((report.get("delivery") or {}).get(key, 0) for key in ("retryable", "uncertain"))
-    heading = "❌ BÚSQUEDA FALLIDA" if failed else "⚠️ BÚSQUEDA TERMINADA CON COBERTURA INCOMPLETA" if errors else "⚠️ BÚSQUEDA TERMINADA CON AVISOS PENDIENTES" if delivery_problem else "✅ BÚSQUEDA COMPLETADA"
+    heading = "❌ BÚSQUEDA FALLIDA" if failed else "⚠️ BÚSQUEDA TERMINADA CON COBERTURA INCOMPLETA" if errors else "⚠️ BÚSQUEDA COMPLETADA CON AVISOS DE COBERTURA" if warnings else "⚠️ BÚSQUEDA TERMINADA CON AVISOS PENDIENTES" if delivery_problem else "✅ BÚSQUEDA COMPLETADA"
     lines = [heading, "Automática" if report["event"] == "schedule" else "Manual", ""]
     if collection is None:
         lines.append("No se completó la consulta de fuentes. Revisa la ejecución.")
     else:
         attempted = collection.get("sources_attempted", 0)
+        healthy = attempted - len(errors) - len(warnings)
         lines.extend([
-            f'Fuentes: {attempted - len(errors)} correctas / {len(errors)} fallidas.',
+            f'Fuentes: {healthy} al día / {len(warnings)} con aviso de cobertura / {len(errors)} fallidas.',
             f'Registros examinados: {collection.get("fetched", 0)}.',
             f'Procesos nuevos registrados: {collection.get("created", 0)}; actualizados: {collection.get("updated", 0)}.',
         ])
         if errors:
             lines.append("Fuentes pendientes: " + ", ".join(sorted(errors)))
+        if warnings:
+            lines.append("Avisos de cobertura:")
+            lines.extend(f"- {name}: {detail}" for name, detail in sorted(warnings.items()))
     delivery = report.get("delivery")
     if delivery is not None:
         lines.append(f'Avisos de convocatorias enviados: {delivery.get("sent", 0)}; pendientes de reintento: {delivery.get("retryable", 0)}; entrega incierta: {delivery.get("uncertain", 0)}.')

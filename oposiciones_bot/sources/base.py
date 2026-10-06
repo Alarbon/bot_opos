@@ -26,6 +26,12 @@ class SourceAdapter(ABC):
 
     def __init__(self, client: HttpClient):
         self.client = client
+        # A source can complete successfully while its official publication
+        # index is temporarily behind today's date.  Adapters may set these
+        # fields during ``fetch`` so the pipeline records the exact coverage
+        # instead of either hiding the gap or treating the source as broken.
+        self.covered_through: date | None = None
+        self.coverage_warning: str | None = None
 
     @abstractmethod
     def fetch(self, context: FetchContext) -> list[Candidate]:

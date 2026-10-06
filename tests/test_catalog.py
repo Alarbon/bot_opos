@@ -44,3 +44,19 @@ def test_missing_fields_visible_as_review_but_a2_excluded(store, candidate_facto
 def test_invalid_follow_id(store):
     with pytest.raises(ValueError):
         store.follow("'; DROP TABLE processes")
+
+
+def test_catalog_exports_partial_source_and_exact_checkpoint(store, app_config):
+    run_id = store.start_source_run("bop_jaen")
+    store.finish_source_run(
+        run_id,
+        status="PARTIAL",
+        error="archivo oficial disponible hasta 2026-10-05",
+        covered_through=date(2026, 10, 5),
+    )
+
+    source = build_catalog(store, app_config, date(2026, 10, 6))["sources"][0]
+    assert source["status"] == "PARTIAL"
+    assert source["last_covered_through"] == "2026-10-05"
+    assert "2026-10-05" in source["error"]
+    assert build_catalog(store, app_config, date(2026, 10, 6))["version"] == 2

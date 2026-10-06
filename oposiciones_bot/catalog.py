@@ -70,8 +70,22 @@ def build_catalog(store: SQLiteStore, config: AppConfig, today: date) -> dict:
         data.pop("full_text", None)
         data.update(id=row["id"], aliases=aliases, category=category, review_reason=decision.reason if not decision.include else "", followed=followed, last_seen=max(r["last_seen"] for r in related_rows), last_changed=max(r["last_changed"] for r in related_rows), history=history)
         processes.append(data)
-    sources = [dict(row) for row in store.connection.execute("SELECT source,started_at,status,items_found,error FROM source_runs WHERE id IN (SELECT MAX(id) FROM source_runs GROUP BY source) ORDER BY source")]
-    return {"version": 1, "generated_at": utc_now_iso(), "processes": processes, "sources": sources}
+    sources = [
+        dict(row)
+        for row in store.connection.execute(
+            """
+            SELECT runs.source, runs.started_at, runs.status,
+                   runs.items_found, runs.error,
+                   checkpoints.covered_through AS last_covered_through
+            FROM source_runs AS runs
+            LEFT JOIN source_checkpoints AS checkpoints
+              ON checkpoints.source = runs.source
+            WHERE runs.id IN (SELECT MAX(id) FROM source_runs GROUP BY source)
+            ORDER BY runs.source
+            """
+        )
+    ]
+    return {"version": 2, "generated_at": utc_now_iso(), "processes": processes, "sources": sources}
 
 
 def export_catalog(store: SQLiteStore, config: AppConfig, today: date, path: Path) -> None:

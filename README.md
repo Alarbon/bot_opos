@@ -350,7 +350,7 @@ implementación actual.
 |---|:---:|---|---|
 | BOE | Activa | API específica | Recorre 2A/2B y amplía tanto títulos TI como anuncios de localidades objetivo aunque el sumario sea genérico. Puede perder títulos atípicos fuera de esas anclas. |
 | BOJA | Activa | API específica | Consulta por intervalo de fechas, pagina resultados y deduplica los identificadores; la ventana funciona también al cruzar el cambio de año. |
-| BOP de Jaén | Activa | HTML/PDF específico | Recorre boletines diarios y extrae edictos candidatos. Descarga PDF y extrae texto; no hace OCR. |
+| BOP de Jaén | Activa | Sitio actual + histórico oficial | Intenta primero el boletín diario. Como el servidor actual rechaza las redes de GitHub/Cloudflare, usa automáticamente `bophistorico.dipujaen.es`, divide el PDF completo en edictos y conserva las referencias BOP. El histórico suele publicarse con un día de retraso; el bot muestra la última fecha realmente cubierta y vuelve a consultar el intervalo pendiente. No hace OCR. |
 | Diputación de Jaén | Activa | API específica | Consulta el tablón y su detalle; enlaza adjuntos, pero no extrae automáticamente el texto de cada adjunto. |
 | IAAP | Activa | HTML genérico | Solo examina enlaces de las páginas configuradas. No es un rastreador dedicado del ciclo completo del proceso. |
 | Ayuntamiento de Martos | Activa | HTML genérico | Busca señales en texto de enlace y su contenedor inmediato; amplía fichas HTML del mismo dominio y PDF enlazados directamente. Es sensible a cambios de plantilla. |
@@ -381,6 +381,8 @@ alertas de salud por Telegram. Las claves de umbral/enfriamiento presentes en
   campos esperados.
 - BOE amplía HTML; BOP Jaén sí descarga sus edictos PDF; el adaptador HTML
   genérico extrae un PDF directo o amplía una ficha HTML y conserva sus enlaces.
+- El respaldo histórico del BOP procesa el ejemplar completo para separar sus
+  edictos y no aplica el límite genérico de 120 páginas.
 
 ## GitHub Actions
 
@@ -639,8 +641,8 @@ de B/C1, exigencia universitaria y puestos no informáticos siguen excluidos.
 
 ## Consulta y seguimiento desde Telegram
 
-Al finalizar una búsqueda manual o automática se envía un resumen a Telegram,
-incluso si no hay novedades: fuentes correctas/fallidas, registros examinados,
+Al finalizar una búsqueda manual se envía un resumen a Telegram,
+incluso si no hay novedades: fuentes al día, retrasadas o fallidas, registros examinados,
 procesos registrados/actualizados y avisos entregados o pendientes. Un proceso
 registrado no equivale necesariamente a una oportunidad con inscripción abierta.
 Los fallos se avisan si el runner alcanza el paso final y Telegram está disponible;
@@ -662,7 +664,9 @@ manual; sin ejecutar una búsqueda no habrá avisos nuevos en segundo plano.
 
 La búsqueda es incremental por fuente: desde la fecha de su última consulta
 correcta hasta hoy, incluyendo ambos días. Una consulta fallida no avanza el
-punto de control. La primera consulta usa los 10 días configurados. Las
+punto de control. Una consulta oficial correcta pero retrasada solo avanza hasta
+la última fecha acreditada; así el BOP pendiente se vuelve a consultar. La
+primera consulta usa los 10 días configurados. Las
 consultas manuales comparten esos puntos de control. Los
 tablones sin archivo histórico solo permiten revisar lo que aún publican;
 una ventana de fechas no garantiza recuperar documentos retirados.

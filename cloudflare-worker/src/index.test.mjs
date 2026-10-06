@@ -250,3 +250,77 @@ for (const command of ["/convocatorias", "/detalle", "/detalle aaaaaaaa", "/deta
     } finally { globalThis.fetch = originalFetch; }
   });
 }
+
+test("/convocatorias explains an official source delay without calling it failed", async () => {
+  const originalFetch = globalThis.fetch;
+  const messages = [];
+  globalThis.fetch = async (url, options) => {
+    if (url.startsWith("https://raw.githubusercontent.com/")) {
+      return Response.json({
+        processes: [],
+        generated_at: "2026-10-06T20:00:00Z",
+        sources: [{
+          source: "bop_jaen",
+          status: "PARTIAL",
+          last_covered_through: "2026-10-05",
+          error: "BOP de Jaén: archivo oficial disponible hasta 2026-10-05; 2026-10-06 pendiente de indexación.",
+        }],
+      });
+    }
+    messages.push(JSON.parse(options.body).text);
+    return Response.json({ ok: true, result: {} });
+  };
+  try {
+    let pending;
+    await worker.fetch(new Request("https://example.com/telegram", {
+      method: "POST",
+      headers: { "x-telegram-bot-api-secret-token": "secret" },
+      body: JSON.stringify({ message: { text: "/convocatorias", chat: { id: 1 } } }),
+    }), {
+      WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test",
+    }, { waitUntil(p) { pending = p; } });
+    await pending;
+    assert.match(messages[0], /archivo oficial disponible hasta 2026-10-05/);
+    assert.doesNotMatch(messages[0], /fuentes fallaron/i);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("/estado reports delayed coverage separately from failures", async () => {
+  const originalFetch = globalThis.fetch;
+  const messages = [];
+  globalThis.fetch = async (url, options) => {
+    if (url.startsWith("https://api.github.com/")) {
+      return Response.json({ workflow_runs: [{
+        id: 50, event: "workflow_dispatch", status: "completed", conclusion: "success",
+        run_started_at: "2026-10-06T20:00:00Z", updated_at: "2026-10-06T20:02:00Z",
+        html_url: "https://github.com/run/50",
+      }] });
+    }
+    if (url.startsWith("https://raw.githubusercontent.com/")) {
+      return Response.json({
+        run_id: "50",
+        collection: {
+          sources_attempted: 10, errors: {},
+          warnings: { bop_jaen: "archivo oficial disponible hasta 2026-10-05" },
+          fetched: 21, created: 0, updated: 0,
+        },
+        delivery: { sent: 0, retryable: 0, uncertain: 0 },
+      });
+    }
+    messages.push(JSON.parse(options.body).text);
+    return Response.json({ ok: true, result: {} });
+  };
+  try {
+    let pending;
+    await worker.fetch(new Request("https://example.com/telegram", {
+      method: "POST",
+      headers: { "x-telegram-bot-api-secret-token": "secret" },
+      body: JSON.stringify({ message: { text: "/estado", chat: { id: 1 } } }),
+    }), {
+      WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test",
+    }, { waitUntil(p) { pending = p; } });
+    await pending;
+    assert.match(messages[0], /9 al día \/ 1 con aviso de cobertura \/ 0 fallidas/);
+    assert.match(messages[0], /bop_jaen: archivo oficial disponible hasta 2026-10-05/);
+  } finally { globalThis.fetch = originalFetch; }
+});

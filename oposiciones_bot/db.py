@@ -413,7 +413,7 @@ class SQLiteStore:
                 """,
                 (now or utc_now_iso(), status, found, included, (error or "")[:2000], run_id),
             )
-            if status == "OK" and covered_through is not None:
+            if status in {"OK", "PARTIAL"} and covered_through is not None:
                 source = self.connection.execute("SELECT source FROM source_runs WHERE id=?", (run_id,)).fetchone()["source"]
                 self.connection.execute("INSERT INTO source_checkpoints VALUES (?,?) ON CONFLICT(source) DO UPDATE SET covered_through=MAX(covered_through,excluded.covered_through)", (source, covered_through.isoformat()))
 

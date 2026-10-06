@@ -1,10 +1,13 @@
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 import requests
 
 from oposiciones_bot.http import HttpClient, HttpSettings
 from oposiciones_bot.sources.bop_jaen import BOPJaenSource
+from oposiciones_bot.sources.base import FetchContext
+from oposiciones_bot.sources.bop_jaen_archive import ArchiveWindowStatus
 
 
 def test_explicit_latin1_preserves_informatica(monkeypatch):
@@ -62,27 +65,71 @@ def test_private_proxy_is_preferred_and_authenticated(monkeypatch):
     ]
 
 
-def test_private_proxy_failure_falls_back_to_official_origin():
+def test_private_proxy_failure_skips_the_origin_that_is_also_blocked():
     calls = []
 
     class Client:
         def get_text(self, url, **kwargs):
             calls.append((url, kwargs))
-            if url.startswith('https://worker.example/'):
-                raise requests.HTTPError('502')
-            return '<article>Origen oficial</article>'
+            raise requests.HTTPError('424')
 
     source = BOPJaenSource(Client())
     source._proxy_base_url = 'https://worker.example'
     source._proxy_token = 'private-token'
 
-    html = source._daily_html(
-        'https://bop.dipujaen.es/bop/06-10-2026', date(2026, 10, 6)
+    with pytest.raises(RuntimeError, match="proxy del sitio actual"):
+        source._daily_html(
+            'https://bop.dipujaen.es/bop/06-10-2026', date(2026, 10, 6)
+        )
+
+    assert calls == [
+        (
+            'https://worker.example/bop/day/06-10-2026',
+            {'headers': {'Authorization': 'Bearer private-token'}},
+        )
+    ]
+
+
+def test_fetch_uses_official_archive_and_exposes_exact_delay(monkeypatch, app_config):
+    calls = []
+
+    class Client:
+        def get_text(self, url, **kwargs):
+            calls.append(url)
+            raise requests.HTTPError('424')
+
+    class Archive:
+        def __init__(self, client):
+            assert isinstance(client, Client)
+
+        def fetch_window(self, context):
+            assert context.today == date(2026, 10, 6)
+            return SimpleNamespace(
+                candidates=[],
+                bulletins=(object(),),
+                covered_through=date(2026, 10, 5),
+                requested_start=date(2026, 9, 26),
+                requested_end=date(2026, 10, 6),
+                status=ArchiveWindowStatus.LAGGING,
+            )
+
+    monkeypatch.setenv('BOP_PROXY_TOKEN', 'private-token')
+    monkeypatch.setattr('oposiciones_bot.sources.bop_jaen.BOPJaenArchive', Archive)
+    source = BOPJaenSource(Client())
+    context = FetchContext(
+        today=date(2026, 10, 6),
+        lookback_days=10,
+        source_config={'proxy_base_url': 'https://worker.example'},
+        app_config=app_config,
     )
 
-    assert 'Origen oficial' in html
-    assert calls[1][0] == 'https://bop.dipujaen.es/bop/06-10-2026'
-    assert calls[1][1] == {}
+    assert source.fetch(context) == []
+    assert calls == ['https://worker.example/bop/day/06-10-2026']
+    assert source.covered_through == date(2026, 10, 5)
+    assert source.coverage_warning == (
+        'BOP de Jaén: archivo oficial disponible hasta 2026-10-05; '
+        '2026-10-06 pendiente de indexación'
+    )
 
 
 def test_private_document_proxy_uses_only_day_and_numeric_edict():

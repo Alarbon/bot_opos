@@ -130,7 +130,7 @@ def _run(args: argparse.Namespace) -> int:
                 if args.metrics_file and not args.dry_run:
                     _save_metrics(args.metrics_file, {"started_at": started_at, "collection": asdict(collection)})
                 LOGGER.info(
-                    "Recogidas=%s incluidas=%s nuevas=%s actualizadas=%s sin_cambios=%s filtradas=%s recordatorios=%s errores=%s",
+                    "Recogidas=%s incluidas=%s nuevas=%s actualizadas=%s sin_cambios=%s filtradas=%s recordatorios=%s avisos_cobertura=%s errores=%s",
                     collection.fetched,
                     collection.included,
                     collection.created,
@@ -138,6 +138,7 @@ def _run(args: argparse.Namespace) -> int:
                     collection.unchanged,
                     collection.filtered,
                     collection.reminders,
+                    len(collection.warnings),
                     len(collection.errors),
                 )
             finally:

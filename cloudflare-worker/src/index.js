@@ -294,6 +294,7 @@ function listProcesses(data, followedOnly = false, page = 1) {
   return [followedOnly ? "📌 Tus seguimientos" : "📋 Convocatorias informáticas", `Datos consultados: ${data.generated_at}`, `Página ${page}/${pages}. Actualiza con /buscar.`, "",
     ...(items.length ? items.slice((page - 1) * 10, page * 10).map(p => `${p.id.slice(0, 8)} — ${p.title}\n${labels[p.category] || "Por revisar"}${p.followed ? " · Siguiendo" : ""}\n${p.organisation}\nMunicipio: ${p.locality || "No confirmado"}\nProvincia: ${p.province || "No confirmada"}\nÁmbito: ${p.scope || "No confirmado"}\n/detalle ${p.id.slice(0, 8)}`) : ["No hay procesos registrados en esta lista."]),
     "", `Más páginas: /${followedOnly ? "seguimientos" : "convocatorias"} N`, "Para recibir cambios: /seguir ID. Para quitar: /dejar ID.",
+    ...(data.sources?.filter(s => s.status === "PARTIAL").map(s => `⚠️ ${s.error || `${s.source}: cobertura oficial pendiente de confirmar`}`) || []),
     ...(data.sources?.some(s => s.status === "ERROR") ? ["⚠️ Algunas fuentes fallaron en la última consulta; cobertura incompleta."] : []),
   ].join("\n\n");
 }
@@ -352,8 +353,10 @@ async function latestStatus(env) {
         const collection = report.collection;
         if (collection) {
           const failed = Object.keys(collection.errors || {});
-          lines.push(`Fuentes: ${collection.sources_attempted - failed.length} correctas / ${failed.length} fallidas.`,
+          const delayed = Object.entries(collection.warnings || {});
+          lines.push(`Fuentes: ${collection.sources_attempted - failed.length - delayed.length} al día / ${delayed.length} con aviso de cobertura / ${failed.length} fallidas.`,
             `Registros examinados: ${collection.fetched}; nuevos procesos: ${collection.created}; actualizados: ${collection.updated}.`);
+          if (delayed.length) lines.push("⚠️ Avisos de cobertura: " + delayed.map(([name, detail]) => `${name}: ${detail}`).join("; "));
           if (failed.length) lines.push("⚠️ Cobertura incompleta. Pendientes: " + failed.join(", "));
         } else lines.push("No se completó la consulta de fuentes.");
         if (report.delivery) lines.push(`Avisos enviados: ${report.delivery.sent}; reintentos pendientes: ${report.delivery.retryable}; entregas inciertas: ${report.delivery.uncertain}.`);

@@ -34,6 +34,7 @@ class CollectionSummary:
     filtered: int = 0
     reminders: int = 0
     errors: dict[str, str] = field(default_factory=dict)
+    warnings: dict[str, str] = field(default_factory=dict)
 
 
 def _should_notify_on_bootstrap(candidate: Any, today: date, max_age_days: int) -> bool:
@@ -88,6 +89,13 @@ def collect(
         run_id = store.start_source_run(adapter.name)
         source_included = 0
         try:
+            # Adapters are normally short-lived, but resetting these fields
+            # keeps repeated in-process collections from reusing stale
+            # coverage metadata.
+            if hasattr(adapter, "covered_through"):
+                adapter.covered_through = None
+            if hasattr(adapter, "coverage_warning"):
+                adapter.coverage_warning = None
             context = FetchContext(
                 today=today,
                 lookback_days=source_lookback,
@@ -137,12 +145,30 @@ def collect(
                     summary.updated += 1
                 else:
                     summary.unchanged += 1
+            coverage_warning = getattr(adapter, "coverage_warning", None)
+            covered_through = getattr(adapter, "covered_through", None)
+            if covered_through is None and not coverage_warning:
+                covered_through = today
+            if covered_through is not None and covered_through > today:
+                covered_through = today
+            if (
+                covered_through is not None
+                and covered_through < today
+                and not coverage_warning
+            ):
+                coverage_warning = (
+                    f"cobertura oficial acreditada hasta {covered_through.isoformat()}; "
+                    f"queda pendiente comprobar hasta {today.isoformat()}"
+                )
+            if coverage_warning:
+                summary.warnings[adapter.name] = str(coverage_warning)
             store.finish_source_run(
                 run_id,
-                status="OK",
+                status="PARTIAL" if coverage_warning else "OK",
                 found=len(candidates),
                 included=source_included,
-                covered_through=today,
+                error=str(coverage_warning or ""),
+                covered_through=covered_through,
             )
         except Exception as exc:
             message = f"{exc.__class__.__name__}: {exc}"
