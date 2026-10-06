@@ -22,7 +22,8 @@ def main():
             articles = len(re.findall(r"<article\b", response.text))
             print(f"Articulos: {articles}")
             if response.status_code >= 400:
-                body = re.sub(r"<[^>]+>", " ", response.text)
+                body = re.sub(r"<(style|script)\b[^>]*>.*?</\1>", " ", response.content.decode("utf-8", errors="replace"), flags=re.S | re.I)
+                body = re.sub(r"<[^>]+>", " ", body)
                 print("Error (extracto):", " ".join(body.split())[:2000])
         except requests.RequestException as exc:
             print("Error de conexion:", type(exc).__name__, str(exc))
