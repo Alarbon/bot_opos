@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-10-07T17:55:10+00:00",
+  "generated_at": "2026-10-08T10:35:46+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
@@ -106,7 +106,7 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-07T17:54:49+00:00",
+      "last_seen": "2026-10-08T10:35:27+00:00",
       "last_changed": "2026-10-06T19:10:02+00:00",
       "history": [
         {
@@ -122,83 +122,83 @@
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-10-07T17:54:51+00:00",
+      "started_at": "2026-10-08T10:35:29+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-10-07T17:54:15+00:00",
+      "started_at": "2026-10-08T10:34:50+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-10-07T17:54:49+00:00",
+      "started_at": "2026-10-08T10:35:27+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "boe",
-      "started_at": "2026-10-07T17:54:01+00:00",
+      "started_at": "2026-10-08T10:33:45+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "boja",
-      "started_at": "2026-10-07T17:54:02+00:00",
+      "started_at": "2026-10-08T10:33:46+00:00",
       "status": "OK",
-      "items_found": 7,
+      "items_found": 15,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-10-07T17:54:05+00:00",
+      "started_at": "2026-10-08T10:34:27+00:00",
       "status": "PARTIAL",
       "items_found": 0,
-      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-06; 2026-10-07 pendiente de indexación",
-      "last_covered_through": "2026-10-06"
+      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-07; 2026-10-08 pendiente de indexación",
+      "last_covered_through": "2026-10-07"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-10-07T17:55:01+00:00",
+      "started_at": "2026-10-08T10:35:42+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "iaap",
-      "started_at": "2026-10-07T17:54:10+00:00",
+      "started_at": "2026-10-08T10:34:34+00:00",
       "status": "OK",
       "items_found": 5,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "sas",
-      "started_at": "2026-10-07T17:53:54+00:00",
+      "started_at": "2026-10-08T10:32:23+00:00",
       "status": "OK",
       "items_found": 1,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     },
     {
       "source": "universidad_jaen",
-      "started_at": "2026-10-07T17:55:03+00:00",
+      "started_at": "2026-10-08T10:35:44+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
-      "last_covered_through": "2026-10-07"
+      "last_covered_through": "2026-10-08"
     }
   ]
 }
