@@ -1,10 +1,10 @@
 {
-  "run_id": "37771059548",
+  "run_id": "37822951967",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/37771059548",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/37822951967",
   "status": "success",
-  "finished_at": "2026-10-08T11:37:37.744409+00:00",
-  "started_at": "2026-10-08T13:35:53.085041+02:00",
+  "finished_at": "2026-10-08T18:17:41.360977+00:00",
+  "started_at": "2026-10-08T20:16:21.606665+02:00",
   "collection": {
     "sources_attempted": 10,
     "fetched": 18,
