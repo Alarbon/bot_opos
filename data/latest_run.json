@@ -1,24 +1,22 @@
 {
-  "run_id": "38301324992",
+  "run_id": "38418311185",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/38301324992",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/38418311185",
   "status": "success",
-  "finished_at": "2026-10-12T20:01:49.279575+00:00",
-  "started_at": "2026-10-12T22:00:11.449032+02:00",
+  "finished_at": "2026-10-13T15:02:23.271056+00:00",
+  "started_at": "2026-10-13T17:00:59.038854+02:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 10,
+    "fetched": 21,
     "included": 5,
     "created": 0,
     "updated": 0,
     "unchanged": 5,
-    "filtered": 5,
+    "filtered": 16,
     "reminders": 0,
-    "errors": {
-      "boja": "HTTPError: 400 Client Error: Bad Request for url: https://datos.juntadeandalucia.es/api/v0/boja/get/search_pagination?order_by=dateUTC&mode=DESC&size=100&date_from=2026-10-11&date_to=2026-10-12&campos=id&campos=number&campos=date&campos=dateUTC&campos=titleSec&campos=organisation&campos=year&campos=type&campos=dispositionNumber&campos=sectionN2&campos=summaryNoHtml&campos=bodyNoHtml&campos=id_file&campos=pathPdf&campos=hashPdf&campos=publicUrl&page=0"
-    },
+    "errors": {},
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-09; 2026-10-12 pendiente de indexación"
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-09; 2026-10-13 pendiente de indexación"
     }
   },
   "delivery": {
