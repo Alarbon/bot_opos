@@ -1,22 +1,22 @@
 {
-  "run_id": "38575118891",
+  "run_id": "38728681812",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/38575118891",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/38728681812",
   "status": "success",
-  "finished_at": "2026-10-14T13:51:37.675886+00:00",
-  "started_at": "2026-10-14T15:50:06.821060+02:00",
+  "finished_at": "2026-10-15T11:39:46.502915+00:00",
+  "started_at": "2026-10-15T13:38:03.598055+02:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 30,
+    "fetched": 27,
     "included": 5,
     "created": 0,
     "updated": 0,
     "unchanged": 5,
-    "filtered": 25,
+    "filtered": 22,
     "reminders": 0,
     "errors": {},
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-13; 2026-10-14 pendiente de indexación"
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-13; 2026-10-15 pendiente de indexación"
     }
   },
   "delivery": {
