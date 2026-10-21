@@ -1,23 +1,23 @@
 {
-  "run_id": "38728681812",
+  "run_id": "39653706299",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/38728681812",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/39653706299",
   "status": "success",
-  "finished_at": "2026-10-15T11:39:46.502915+00:00",
-  "started_at": "2026-10-15T13:38:03.598055+02:00",
+  "finished_at": "2026-10-21T18:34:28.193518+00:00",
+  "started_at": "2026-10-21T20:33:11.750148+02:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 27,
+    "fetched": 34,
     "included": 5,
     "created": 0,
     "updated": 0,
     "unchanged": 5,
-    "filtered": 22,
+    "filtered": 29,
     "reminders": 0,
-    "errors": {},
-    "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-13; 2026-10-15 pendiente de indexación"
-    }
+    "errors": {
+      "bop_jaen": "ResponseTooLarge: Respuesta superior al limite permitido: https://bophistorico.dipujaen.es/high.raw?id=0001747472&name=00000001.original.pdf&attachment=0001747472.pdf"
+    },
+    "warnings": {}
   },
   "delivery": {
     "claimed": 0,
