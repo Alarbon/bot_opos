@@ -1,30 +1,152 @@
 {
-  "run_id": "41104576207",
+  "run_id": "41118982815",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41104576207",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41118982815",
   "status": "success",
-  "finished_at": "2026-10-30T18:14:13.030847+00:00",
-  "started_at": "2026-10-30T19:10:44.623429+01:00",
+  "finished_at": "2026-10-30T19:57:56.476660+00:00",
+  "started_at": "2026-10-30T20:54:28.954247+01:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 49,
+    "fetched": 11,
     "included": 1,
     "created": 0,
     "updated": 0,
     "unchanged": 1,
-    "filtered": 48,
+    "filtered": 10,
     "reminders": 0,
-    "errors": {
-      "boe": "RetryError: HTTPSConnectionPool(host='www.boe.es', port=443): Max retries exceeded with url: /datosabiertos/api/boe/sumario/20261030 (Caused by ResponseError('too many 500 error responses'))",
-      "bop_jaen": "ResponseTooLarge: Respuesta superior al limite permitido: https://bophistorico.dipujaen.es/high.raw?id=0001747472&name=00000001.original.pdf&attachment=0001747472.pdf"
+    "errors": {},
+    "warnings": {
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-29; 2026-10-30 pendiente de indexación",
+      "iaap": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout"
     },
-    "warnings": {}
+    "compatible": 0,
+    "review": 1,
+    "not_compatible": 0,
+    "notified_new": 0,
+    "silent_new": 0,
+    "pending_notifications": 0,
+    "duration_seconds": 202.2,
+    "sources": {
+      "sas": {
+        "window_start": "2026-10-30",
+        "found": 1,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 8.6
+      },
+      "boe": {
+        "window_start": "2026-10-21",
+        "found": 2,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 10.1
+      },
+      "boja": {
+        "window_start": "2026-10-30",
+        "found": 4,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 5.4
+      },
+      "bop_jaen": {
+        "window_start": "2026-10-13",
+        "found": 0,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "PARTIAL",
+        "covered_through": "2026-10-29",
+        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-29; 2026-10-30 pendiente de indexación",
+        "duration_seconds": 21.2
+      },
+      "iaap": {
+        "window_start": "2026-10-30",
+        "found": 0,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "PARTIAL",
+        "covered_through": null,
+        "detail": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
+        "duration_seconds": 105.5
+      },
+      "ayuntamiento_martos": {
+        "window_start": "2026-10-30",
+        "found": 2,
+        "included": 1,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 33.2
+      },
+      "ayuntamiento_torredelcampo": {
+        "window_start": "2026-10-30",
+        "found": 0,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 2.4
+      },
+      "ayuntamiento_jaen": {
+        "window_start": "2026-10-30",
+        "found": 0,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 10.8
+      },
+      "diputacion_jaen": {
+        "window_start": "2026-10-30",
+        "found": 0,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 1.6
+      },
+      "universidad_jaen": {
+        "window_start": "2026-10-30",
+        "found": 2,
+        "included": 0,
+        "created": 0,
+        "updated": 0,
+        "status": "OK",
+        "covered_through": "2026-10-30",
+        "detail": "",
+        "duration_seconds": 3.4
+      }
+    },
+    "outcome": "PARTIAL"
   },
   "delivery": {
     "claimed": 0,
     "sent": 0,
     "retryable": 0,
-    "uncertain": 0
+    "uncertain": 0,
+    "suppressed": 0,
+    "released": 0
   },
   "steps": {
     "consulta": "success",
