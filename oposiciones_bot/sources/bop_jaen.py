@@ -18,7 +18,11 @@ from .base import (
     has_it_signal,
     has_public_job_signal,
 )
-from .bop_jaen_archive import ArchiveWindowStatus, BOPJaenArchive
+from .bop_jaen_archive import (
+    DEFAULT_BULLETIN_MAX_BYTES,
+    ArchiveWindowStatus,
+    BOPJaenArchive,
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -196,9 +200,18 @@ class BOPJaenSource(SourceAdapter):
                 "oficial: %s",
                 current_error,
             )
-            archive = BOPJaenArchive(self.client).fetch_window(context)
+            archive = BOPJaenArchive(
+                self.client,
+                max_bulletin_bytes=int(
+                    context.source_config.get(
+                        "archive_max_bytes", DEFAULT_BULLETIN_MAX_BYTES
+                    )
+                ),
+            ).fetch_window(context)
             self.covered_through = archive.covered_through
-            if archive.status is ArchiveWindowStatus.LAGGING:
+            if archive.status is ArchiveWindowStatus.PARTIAL:
+                self.coverage_warning = archive.coverage_warning
+            elif archive.status is ArchiveWindowStatus.LAGGING:
                 self.coverage_warning = (
                     "BOP de Jaén: archivo oficial disponible hasta "
                     f"{archive.covered_through.isoformat()}; "

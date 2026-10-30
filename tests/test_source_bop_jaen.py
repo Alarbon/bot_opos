@@ -99,7 +99,7 @@ def test_fetch_uses_official_archive_and_exposes_exact_delay(monkeypatch, app_co
             raise requests.HTTPError('424')
 
     class Archive:
-        def __init__(self, client):
+        def __init__(self, client, **_kwargs):
             assert isinstance(client, Client)
 
         def fetch_window(self, context):

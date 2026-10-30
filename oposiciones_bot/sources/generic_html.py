@@ -39,16 +39,23 @@ class GenericHTMLSource(SourceAdapter):
         results: list[Candidate] = []
         seen: set[str] = set()
         errors: list[Exception] = []
+        self._failed_urls: list[str] = []
+        suspicious_listings: list[str] = []
         successful_listings = 0
         for listing_url in context.source_config.get("urls", []):
             try:
                 html = self.client.get_text(listing_url)
             except Exception as exc:
                 errors.append(exc)
+                self._failed_urls.append(listing_url)
                 LOGGER.warning("%s: listado no disponible %s: %s", self.name, listing_url, exc)
                 continue
             successful_listings += 1
             soup = BeautifulSoup(html, "lxml")
+            if len(soup.find_all("a", href=True)) < 3 or len(html_to_text(html)) < 200:
+                # An HTTP 200 with an empty shell, an error page or a
+                # JavaScript-only template is not evidence of "no news".
+                suspicious_listings.append(f"{urlparse(listing_url).netloc}: página casi vacía")
             for anchor in soup.find_all("a", href=True):
                 raw_href = str(anchor.get("href") or "").strip()
                 if self._skip_href(raw_href):
@@ -112,6 +119,15 @@ class GenericHTMLSource(SourceAdapter):
                 results.append(enrich_candidate(candidate))
         if not successful_listings and errors:
             raise errors[0]
+        problems = [*self._failed_listing_notes(errors), *suspicious_listings]
+        if problems:
+            # Some listings answered and others did not (or answered with an
+            # unrecognisable page).  Report it instead of a silent "OK".
+            self.coverage_warning = (
+                f"{self.name}: {len(problems)} de "
+                f"{len(context.source_config.get('urls', []))} listado(s) sin "
+                "consultar o con formato no reconocido: " + "; ".join(problems)
+            )[:1500]
         if self.name == "ayuntamiento_martos":
             grouped: dict[str, list[Candidate]] = {}
             others = []
@@ -140,6 +156,12 @@ class GenericHTMLSource(SourceAdapter):
                 others.append(enrich_candidate(candidate))
             results = others
         return results
+
+    def _failed_listing_notes(self, errors: list[Exception]) -> list[str]:
+        return [
+            f"{urlparse(url).netloc}: {type(exc).__name__}"
+            for url, exc in zip(getattr(self, "_failed_urls", []), errors)
+        ]
 
     @staticmethod
     def _skip_href(href: str) -> bool:

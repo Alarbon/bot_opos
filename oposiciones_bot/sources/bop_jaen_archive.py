@@ -20,6 +20,11 @@ ARCHIVE_BASE_URL = "https://bophistorico.dipujaen.es/"
 ARCHIVE_RESULTS_URL = urljoin(ARCHIVE_BASE_URL, "results.vm")
 OFFICIAL_BOP_BASE_URL = "https://bop.dipujaen.es/"
 MAX_ARCHIVE_WINDOW_DAYS = 10
+# A complete bulletin is a single official PDF and regularly exceeds the
+# generic 15 MB limit used for individual documents (one of 18 MB blocked the
+# source from 2026-10-21).  The archive host is fixed and validated above, so a
+# larger, still bounded, limit is safe for this one route.
+DEFAULT_BULLETIN_MAX_BYTES = 80_000_000
 
 
 class ArchiveFetchError(RuntimeError):
@@ -30,6 +35,7 @@ class ArchiveWindowStatus(StrEnum):
     CURRENT = "CURRENT"
     LAGGING = "LAGGING"
     EMPTY = "EMPTY"
+    PARTIAL = "PARTIAL"
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +81,7 @@ class ArchiveFetchResult:
     latest_available: date | None
     covered_through: date | None
     status: ArchiveWindowStatus
+    failed_bulletins: tuple[tuple[ArchiveBulletin, str], ...] = ()
 
     @property
     def is_lagging(self) -> bool:
@@ -83,6 +90,21 @@ class ArchiveFetchResult:
     @property
     def coverage_warning(self) -> str | None:
         """Message ready to copy onto ``SourceAdapter.coverage_warning``."""
+        if self.status is ArchiveWindowStatus.PARTIAL:
+            failed = "; ".join(
+                f"{bulletin.publication_date.isoformat()} ({reason[:160]})"
+                for bulletin, reason in self.failed_bulletins
+            )
+            covered = (
+                self.covered_through.isoformat()
+                if self.covered_through
+                else "ninguna fecha nueva"
+            )
+            return (
+                f"BOP de Jaén: {len(self.failed_bulletins)} ejemplar(es) del "
+                f"histórico no se pudieron procesar: {failed}. Cobertura "
+                f"acreditada: {covered}; se reintentará en la próxima búsqueda"
+            )
         if self.status is ArchiveWindowStatus.EMPTY:
             return (
                 "BOP Jaen historico: consulta valida sin ejemplares; "
@@ -534,8 +556,9 @@ class BOPJaenArchive:
 
     name = "bop_jaen"
 
-    def __init__(self, client: object):
+    def __init__(self, client: object, *, max_bulletin_bytes: int = DEFAULT_BULLETIN_MAX_BYTES):
         self.client = client
+        self.max_bulletin_bytes = int(max_bulletin_bytes)
 
     def _search_window(self, start: date, end: date) -> tuple[ArchiveBulletin, ...]:
         offset = 0
@@ -595,15 +618,39 @@ class BOPJaenArchive:
 
         all_bulletins.sort(key=lambda item: (item.publication_date, item.archive_id))
         candidates: list[Candidate] = []
+        failures: list[tuple[ArchiveBulletin, str]] = []
         for bulletin in all_bulletins:
-            pdf = self.client.get_bytes(bulletin.pdf_url)
-            text = extract_bulletin_text(pdf)
-            for edict in parse_bulletin_edicts(text, bulletin):
+            # One unreadable bulletin must not hide every other day: process
+            # the rest, but never claim coverage past the first failed date.
+            try:
+                pdf = self.client.get_bytes(
+                    bulletin.pdf_url, max_bytes=self.max_bulletin_bytes
+                )
+                text = extract_bulletin_text(pdf)
+                edicts = parse_bulletin_edicts(text, bulletin)
+            except Exception as exc:
+                failures.append((bulletin, f"{type(exc).__name__}: {exc}"))
+                continue
+            for edict in edicts:
                 if _is_it_public_job(edict):
                     candidates.append(_candidate_from_edict(edict))
 
+        if all_bulletins and len(failures) == len(all_bulletins):
+            bulletin, reason = failures[0]
+            raise ArchiveFetchError(
+                "Ningun ejemplar del historico se pudo procesar; primero "
+                f"{bulletin.publication_date.isoformat()}: {reason}"
+            )
+
         latest = max((item.publication_date for item in all_bulletins), default=None)
-        if latest is None:
+        covered_through = latest
+        if failures:
+            first_failed = min(bulletin.publication_date for bulletin, _ in failures)
+            covered_through = first_failed - timedelta(days=1)
+            if covered_through < start:
+                covered_through = None
+            status = ArchiveWindowStatus.PARTIAL
+        elif latest is None:
             status = ArchiveWindowStatus.EMPTY
         elif latest < end:
             status = ArchiveWindowStatus.LAGGING
@@ -615,8 +662,9 @@ class BOPJaenArchive:
             requested_start=start,
             requested_end=end,
             latest_available=latest,
-            covered_through=latest,
+            covered_through=covered_through,
             status=status,
+            failed_bulletins=tuple(failures),
         )
 
     def fetch_window(self, context: FetchContext) -> ArchiveFetchResult:

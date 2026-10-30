@@ -43,4 +43,13 @@ jobs:
           OPERATION: ${{ inputs.operation }}
           PROCESS_ID: ${{ inputs.process_id }}
         run: |
-          python -c 'import os; from oposiciones_bot.telegram import TelegramSettings, TelegramClient; s=TelegramSettings.from_environment(); assert s, "Faltan secretos Telegram"; TelegramClient(s).send(("✅ Seguimiento activado: " if os.environ["OPERATION"] == "follow" else "✅ Seguimiento desactivado: ") + os.environ["PROCESS_ID"][:8])'
+          python -c 'import os; from oposiciones_bot.telegram import TelegramSettings, TelegramClient; s=TelegramSettings.from_environment(); assert s, "Faltan secretos Telegram"; TelegramClient(s).send(("✅ Seguimiento activado y guardado: " if os.environ["OPERATION"] == "follow" else "✅ Seguimiento desactivado y guardado: ") + os.environ["PROCESS_ID"][:8])'
+
+      - name: Avisar si no se pudo guardar
+        if: ${{ failure() }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python -c 'import os; from oposiciones_bot.telegram import TelegramSettings, TelegramClient; s=TelegramSettings.from_environment(); s and TelegramClient(s).send("❌ No se pudo guardar el cambio de seguimiento. Revisa la ejecución: " + os.environ["RUN_URL"])' || true

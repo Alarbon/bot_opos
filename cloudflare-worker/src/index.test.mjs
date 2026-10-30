@@ -164,39 +164,163 @@ for (const [command, action] of [["/automatico_on", "enable"], ["/automatico_off
 }
 
 
-for (const status of [200, 204, 403]) {
-  test(`/buscar handles GitHub HTTP ${status}`, async () => {
-    const originalFetch = globalThis.fetch;
-    const messages = [];
-    let dispatches = 0;
-    globalThis.fetch = async (url, options) => {
-      if (url.startsWith("https://api.github.com/")) {
-        dispatches++;
-        return new Response(status === 204 ? null : JSON.stringify({ workflow_run_id: 123 }), { status });
+const ENV = {
+  WEBHOOK_SECRET: "test-secret", TELEGRAM_CHAT_ID: "1",
+  TELEGRAM_BOT_TOKEN: "test-token", GITHUB_TOKEN: "test-token",
+};
+
+async function sendUpdate(update, env = ENV, headers = { "x-telegram-bot-api-secret-token": "test-secret" }) {
+  let pending;
+  const response = await worker.fetch(new Request("https://example.com/telegram", {
+    method: "POST", headers, body: JSON.stringify(update),
+  }), env, { waitUntil(promise) { pending = promise; } });
+  if (pending) await pending;
+  return response;
+}
+
+function mockGitHub({ runs = [], dispatchStatus = 204, runsStatus = 200 } = {}) {
+  const calls = { dispatches: [], listings: 0, messages: [] };
+  globalThis.fetch = async (url, options = {}) => {
+    if (url.startsWith("https://api.github.com/")) {
+      if ((options.method || "GET") === "POST") {
+        calls.dispatches.push(JSON.parse(options.body));
+        return new Response(dispatchStatus === 204 ? null : JSON.stringify({ workflow_run_id: 123, html_url: "https://github.com/run/123" }), { status: dispatchStatus });
       }
-      messages.push(JSON.parse(options.body).text);
-      return Response.json({ ok: true, result: {} });
-    };
-    try {
-      let pending;
-      const response = await worker.fetch(new Request("https://example.com/telegram", {
-        method: "POST",
-        headers: { "x-telegram-bot-api-secret-token": "test-secret" },
-        body: JSON.stringify({ message: { text: "/buscar", chat: { id: 1 } } }),
-      }), {
-        WEBHOOK_SECRET: "test-secret", TELEGRAM_CHAT_ID: "1",
-        TELEGRAM_BOT_TOKEN: "test-token", GITHUB_TOKEN: "test-token",
-      }, { waitUntil(promise) { pending = promise; } });
-      await pending;
-      assert.equal(response.status, 200);
-      assert.equal(dispatches, 1);
-      assert.equal(messages.length, 2);
-      assert.ok(messages[1].startsWith(status === 403 ? "❌" : "✅"));
-    } finally {
-      globalThis.fetch = originalFetch;
+      calls.listings++;
+      return new Response(JSON.stringify({ workflow_runs: runs }), { status: runsStatus });
     }
+    if (url.startsWith("https://raw.githubusercontent.com/")) return new Response("missing", { status: 404 });
+    calls.messages.push(JSON.parse(options.body).text);
+    return Response.json({ ok: true, result: {} });
+  };
+  return calls;
+}
+
+for (const status of [200, 204, 403, 422, 500]) {
+  test(`/buscar reports a request (not a finished search) for GitHub HTTP ${status}`, async () => {
+    const originalFetch = globalThis.fetch;
+    const calls = mockGitHub({ dispatchStatus: status });
+    try {
+      const response = await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+      assert.equal(response.status, 200);
+      assert.equal(calls.dispatches.length, 1);
+      assert.deepEqual(calls.dispatches[0].inputs, { dry_run: false });
+      assert.equal(calls.messages.length, 1);
+      const accepted = status === 200 || status === 204;
+      assert.ok(calls.messages[0].startsWith(accepted ? "📨" : "❌"));
+      assert.doesNotMatch(calls.messages[0], /completad|iniciada/i);
+      if (!accepted) assert.match(calls.messages[0], /No se ha iniciado nada/);
+      if (status === 200) assert.match(calls.messages[0], /github\.com\/run\/123/);
+    } finally { globalThis.fetch = originalFetch; }
   });
 }
+
+for (const state of ["queued", "in_progress", "waiting"]) {
+  test(`/buscar does not queue a duplicate while a run is ${state}`, async () => {
+    const originalFetch = globalThis.fetch;
+    const calls = mockGitHub({ runs: [{ id: 9, status: state, created_at: "2026-10-30T07:30:00Z", html_url: "https://github.com/run/9" }] });
+    try {
+      await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+      assert.equal(calls.dispatches.length, 0);
+      assert.match(calls.messages[0], /Ya hay una búsqueda/);
+      assert.match(calls.messages[0], /run\/9/);
+    } finally { globalThis.fetch = originalFetch; }
+  });
+}
+
+test("/buscar still dispatches when the active-run check fails", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = mockGitHub({ runsStatus: 502 });
+  try {
+    await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+    assert.equal(calls.dispatches.length, 1);
+    assert.ok(calls.messages[0].startsWith("📨"));
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("/buscar network failure is reported as unknown, not as success", async () => {
+  const originalFetch = globalThis.fetch;
+  const messages = [];
+  globalThis.fetch = async (url, options = {}) => {
+    if (url.startsWith("https://api.github.com/")) {
+      if ((options.method || "GET") === "POST") throw new TypeError("network down");
+      return Response.json({ workflow_runs: [] });
+    }
+    messages.push(JSON.parse(options.body).text);
+    return Response.json({ ok: true, result: {} });
+  };
+  try {
+    await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+    assert.match(messages[0], /^❌/);
+    assert.match(messages[0], /No sé si la solicitud llegó/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("edited, stale, foreign and unauthenticated updates never dispatch", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = mockGitHub();
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    await sendUpdate({ edited_message: { text: "/buscar", chat: { id: 1 }, date: now } });
+    await sendUpdate({ message: { text: "/buscar", chat: { id: 1 }, date: now - 3600 } });
+    await sendUpdate({ message: { text: "/buscar", chat: { id: 2 }, date: now } });
+    const forbidden = await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } }, ENV, { "x-telegram-bot-api-secret-token": "wrong" });
+    assert.equal(forbidden.status, 403);
+    const missing = await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } }, ENV, {});
+    assert.equal(missing.status, 403);
+    assert.equal(calls.dispatches.length, 0);
+    assert.equal(calls.listings, 0);
+    assert.equal(calls.messages.length, 0);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("admin configure requires the webhook secret and subscribes only to new messages", async () => {
+  const originalFetch = globalThis.fetch;
+  const telegramCalls = [];
+  globalThis.fetch = async (url, options) => {
+    telegramCalls.push([url.split("/").pop(), JSON.parse(options.body)]);
+    return Response.json({ ok: true, result: true });
+  };
+  try {
+    const denied = await worker.fetch(new Request("https://example.com/admin/configure", { method: "POST", headers: { authorization: "Bearer nope" } }), ENV, {});
+    assert.equal(denied.status, 403);
+    assert.equal(telegramCalls.length, 0);
+    const ok = await worker.fetch(new Request("https://example.com/admin/configure", { method: "POST", headers: { authorization: "Bearer test-secret" } }), ENV, {});
+    assert.equal(ok.status, 200);
+    const webhook = telegramCalls.find(([method]) => method === "setWebhook")[1];
+    assert.deepEqual(webhook.allowed_updates, ["message"]);
+    assert.equal(webhook.secret_token, "test-secret");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("/estado distinguishes requested, started, completed, successful and running", async () => {
+  const originalFetch = globalThis.fetch;
+  const runs = [
+    { id: 3, event: "workflow_dispatch", status: "queued", created_at: "2026-10-30T09:00:00Z", html_url: "https://github.com/run/3" },
+    { id: 2, event: "schedule", status: "completed", conclusion: "failure", created_at: "2026-10-30T06:30:00Z", run_started_at: "2026-10-30T06:31:00Z", updated_at: "2026-10-30T06:35:00Z", html_url: "https://github.com/run/2" },
+    { id: 1, event: "workflow_dispatch", status: "completed", conclusion: "success", created_at: "2026-10-29T17:00:00Z", run_started_at: "2026-10-29T17:00:10Z", updated_at: "2026-10-29T17:04:00Z", html_url: "https://github.com/run/1" },
+  ];
+  const messages = [];
+  globalThis.fetch = async (url, options = {}) => {
+    if (url.startsWith("https://api.github.com/")) return Response.json({ workflow_runs: runs });
+    if (url.startsWith("https://raw.githubusercontent.com/")) {
+      return Response.json({ run_id: "2", collection: { sources_attempted: 3, errors: { boe: "x", bop_jaen: "y", iaap: "z" }, warnings: {}, fetched: 0, created: 0, updated: 0 }, delivery: null });
+    }
+    messages.push(JSON.parse(options.body).text);
+    return Response.json({ ok: true, result: {} });
+  };
+  try {
+    await sendUpdate({ message: { text: "/estado", chat: { id: 1 } } });
+    const text = messages[0];
+    assert.match(text, /Última solicitada: 30\/10\/26, 10:00:00 — ⏳ en cola \(manual\)/);
+    assert.match(text, /Última iniciada: 30\/10\/26, 7:31:00/);
+    assert.match(text, /Última completada: 30\/10\/26, 7:35:00 — ❌ fallida \(automática programada\)/);
+    assert.match(text, /Última correcta: 29\/10\/26, 18:04:00/);
+    assert.match(text, /Búsqueda en marcha: sí/);
+    assert.match(text, /No se pudo consultar ninguna fuente/);
+    assert.match(text, /Envío de avisos no registrado/);
+  } finally { globalThis.fetch = originalFetch; }
+});
 
 for (const matchingReport of [true, false]) {
   test(`/estado uses local dates and ignores stale summary (${matchingReport})`, async () => {

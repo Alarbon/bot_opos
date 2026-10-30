@@ -35,6 +35,9 @@ collection:
   incremental: true
   incremental_overlap_days: 0
   lookback_days: 10
+  # Tope de la ventana incremental si una fuente lleva semanas sin cobertura;
+  # el hueco anterior se avisa en el resumen en lugar de descargarlo todo.
+  max_lookback_days: 45
   bootstrap_notify_days: 14
   fetch_document_text: true
   max_document_bytes: 15000000
@@ -51,6 +54,8 @@ notifications:
   disable_web_page_preview: true
   source_failure_threshold: 3
   source_failure_cooldown_hours: 24
+  # Pausa entre mensajes (Telegram admite ~1 mensaje/s por chat).
+  min_interval_seconds: 1.0
 
 reminders:
   enabled: true
@@ -87,6 +92,9 @@ sources:
     # cloud, el adaptador reconcilia desde el histórico oficial y registra la
     # última fecha realmente cubierta (normalmente con retraso D+1).
     proxy_base_url: "https://oposiciones-telegram.alarbon98.workers.dev"
+    # Un ejemplar completo del historico supera a veces el limite generico de
+    # 15 MB (el del 15/10/2026 pesa 18,1 MB y bloqueaba la fuente).
+    archive_max_bytes: 80000000
   iaap:
     enabled: true
     kind: html

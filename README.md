@@ -309,6 +309,20 @@ Esta política es **at-most-once best effort**: reduce duplicados automáticos a
 cambio de que una entrega ambigua pueda requerir intervención o perderse. No es
 una garantía de «exactamente una vez».
 
+Otras garantías reales de la entrega:
+
+- Un `RETRYABLE` deja de reclamarse tras 5 intentos (sigue visible en
+  `outbox list`; `outbox retry` lo vuelve a poner en cola).
+- Si Telegram responde 429 con `retry_after`, se detiene el lote y los avisos
+  aún no intentados vuelven a `PENDING` (no se llegó a llamar a Telegram).
+- Entre mensajes se espera `notifications.min_interval_seconds` (1 s).
+- Los avisos de cambio incluyen valor anterior → nuevo y el documento oficial
+  que lo indica. Las fechas de examen marcadas en el anuncio como provisionales
+  se muestran como tales.
+- Un plazo expresado como «N días hábiles desde la publicación en el BOE» nunca
+  se convierte en fecha: genera, como mucho, un aviso **REVISAR** mientras la
+  estimación indique que podría seguir abierto.
+
 ## Diagnóstico de SQLite
 
 ```bash
@@ -348,9 +362,9 @@ implementación actual.
 
 | Fuente | Estado predeterminado | Adaptador actual | Cobertura y límites |
 |---|:---:|---|---|
-| BOE | Activa | API específica | Recorre 2A/2B y amplía tanto títulos TI como anuncios de localidades objetivo aunque el sumario sea genérico. Puede perder títulos atípicos fuera de esas anclas. |
+| BOE | Activa | API de sumarios + índice HTML oficial | Recorre 2A/2B y amplía tanto títulos TI como anuncios de localidades objetivo aunque el sumario sea genérico. Si la API falla (desde finales de octubre de 2026 responde HTTP 500 «Code: 101» para todas las fechas), lee el índice oficial `boe.es/boe/dias/AAAA/MM/DD/` del mismo día. Un día que no se puede leer por ninguna vía deja la fuente PARCIAL sin descartar los demás días. Puede perder títulos atípicos fuera de esas anclas. |
 | BOJA | Activa | API específica | Consulta por intervalo de fechas, pagina resultados y deduplica los identificadores; la ventana funciona también al cruzar el cambio de año. |
-| BOP de Jaén | Activa | Sitio actual + histórico oficial | Intenta primero el boletín diario. Como el servidor actual rechaza las redes de GitHub/Cloudflare, usa automáticamente `bophistorico.dipujaen.es`, divide el PDF completo en edictos y conserva las referencias BOP. El histórico suele publicarse con un día de retraso; el bot muestra la última fecha realmente cubierta y vuelve a consultar el intervalo pendiente. No hace OCR. |
+| BOP de Jaén | Activa | Sitio actual + histórico oficial | Intenta primero el boletín diario. Como el servidor actual rechaza las redes de GitHub/Cloudflare, usa automáticamente `bophistorico.dipujaen.es`, divide el PDF completo en edictos y conserva las referencias BOP. Un ejemplar completo puede superar los 15 MB genéricos (el del 15/10/2026 pesa 18,1 MB), por lo que esta ruta usa `archive_max_bytes` (80 MB). Si un ejemplar no se puede procesar, se procesan los demás y la cobertura se detiene el día anterior al fallido. El histórico suele publicarse con un día de retraso; el bot muestra la última fecha realmente cubierta y vuelve a consultar el intervalo pendiente. No hace OCR. |
 | Diputación de Jaén | Activa | API específica | Consulta el tablón y su detalle; enlaza adjuntos, pero no extrae automáticamente el texto de cada adjunto. |
 | IAAP | Activa | HTML genérico | Solo examina enlaces de las páginas configuradas. No es un rastreador dedicado del ciclo completo del proceso. |
 | Ayuntamiento de Martos | Activa | HTML genérico | Busca señales en texto de enlace y su contenedor inmediato; amplía fichas HTML del mismo dominio y PDF enlazados directamente. Es sensible a cambios de plantilla. |
@@ -387,8 +401,21 @@ alertas de salud por Telegram. Las claves de umbral/enfriamiento presentes en
 ## GitHub Actions
 
 El workflow [`.github/workflows/oposiciones.yml`](.github/workflows/oposiciones.yml)
-se ejecuta solo mediante `workflow_dispatch`: desde `/buscar` en Telegram o
-con Run workflow en GitHub. No hay disparadores por horario.
+se ejecuta mediante `workflow_dispatch` (`/buscar` en Telegram o Run workflow en
+GitHub) y, **una vez subido a GitHub**, también una vez al día a las 08:17 hora
+peninsular. El cron de GitHub va en UTC y no conoce el horario de verano, así que
+hay dos entradas (`17 6 * * *` en verano y `17 7 * * *` en invierno) y el job
+`gate` (`scripts/schedule_gate.py`) deja pasar exactamente una cada día. GitHub
+puede retrasar las ejecuciones programadas o, con mucha carga, omitirlas; si un
+día no llega el resumen matinal, usa `/buscar`. En repositorios públicos GitHub
+desactiva los horarios tras 60 días sin actividad; los commits de estado del bot
+cuentan como actividad.
+
+Si ninguna fuente responde, el último paso marca la ejecución como fallida (el
+resumen dice «NINGUNA FUENTE CONSULTADA»), para no confundirlo con «sin
+novedades». El checkout usa la rama (`ref: ${{ github.ref }}`) y no el commit de
+la solicitud: una búsqueda que esperó en la cola parte del estado guardado por
+la anterior.
 
 ### Comandos desde Telegram
 
@@ -656,11 +683,12 @@ de código mediante rebase. Nunca fuerza un push ni sobrescribe cambios de estad
 remotos: si cambió la base, catálogo o informe, se detiene para revisión. Los
 workflows de búsqueda y seguimiento conservan su bloqueo compartido.
 
-Modo exclusivamente manual: `/buscar` o Run workflow de GitHub inicia la
-consulta. No hay programador ni horario automático. Tras desplegar el Worker,
-`/ayuda` actualiza el menú de Telegram y elimina los antiguos interruptores.
-Los cambios y recordatorios de procesos seguidos se evalúan en cada búsqueda
-manual; sin ejecutar una búsqueda no habrá avisos nuevos en segundo plano.
+`/buscar` o Run workflow de GitHub inician la consulta; con el workflow actual
+subido a GitHub hay además una búsqueda diaria a las 08:17 (hora peninsular).
+No hay interruptores de automatización en Telegram. Tras desplegar el Worker,
+`/ayuda` actualiza el menú de Telegram. Los cambios y recordatorios de procesos
+seguidos se evalúan en cada búsqueda; entre búsquedas no hay avisos en segundo
+plano.
 
 La búsqueda es incremental por fuente: desde la fecha de su última consulta
 correcta hasta hoy, incluyendo ambos días. Una consulta fallida no avanza el

@@ -96,6 +96,37 @@ def is_tai(text: str) -> bool:
     )
 
 
+# Role words accept Spanish plurals and inclusive forms ("Ayudantes técnicos",
+# "Técnico/a", "programadora/or"); the old singular-only pattern excluded the
+# Junta "C1.2003 Ayudantes técnicos - Opción Informática" process.
+_ROLE_WORDS = (
+    r"tecnic[oa]s?|auxiliar(?:es)?|ayudantes?|operador(?:a|es|as)?|"
+    r"programador(?:a|es|as)?|analistas?|administrador(?:a|es|as)?|soporte|"
+    r"desarrollador(?:a|es|as)?|especialistas?|opcion|especialidad"
+)
+_IT_WORDS = (
+    r"informatic[oa]s?|sistemas|tic|software|aplicaciones|programador(?:a|es|as)?|"
+    r"microinformatica|redes|ciberseguridad|tecnologias de la informacion"
+)
+_IT_ROLE_RE = re.compile(rf"\b(?:{_ROLE_WORDS})\b.*\b(?:{_IT_WORDS})\b")
+# Official corps codes such as "B1.2000", "C1.2003" or "A2.2012" followed by an
+# IT denomination ("Tecnologías de la Información y Comunicación").
+_CORPS_IT_RE = re.compile(
+    r"\b(?:a1|a2|b1|c1|c2)\s?\d{4}\b.*\b(?:informatic[oa]s?|tecnologias de la informacion|tic)\b"
+)
+
+
+def is_it_role_title(title: str) -> bool:
+    """Whether a title names an IT post (not just mentions computers)."""
+    role = normalize_text(title)
+    return bool(
+        _IT_ROLE_RE.search(role)
+        or _CORPS_IT_RE.search(role)
+        or re.search(r"\banalistas? programador", role)
+        or is_tai(role)
+    )
+
+
 def _position_text(candidate: Candidate) -> str:
     """Return text that describes the role, without procedural boilerplate.
 
@@ -182,31 +213,46 @@ def classify_qualification(text: str, *, allow_standalone: bool = True) -> Evide
             )
         ):
             mandatory_sentences.append(sentence)
-    mandatory_text = " ".join(mandatory_sentences)
-    mandatory_accepted = [
-        term for term in ACCEPTED_QUALIFICATIONS if term in mandatory_text
-    ]
-    university = [term for term in UNIVERSITY_TERMS if term in mandatory_text]
-    if university:
-        if not mandatory_accepted:
-            return Evidence(Compatibility.NOT_COMPATIBLE.value, ", ".join(university[:3]))
-        alternative = any(
-            marker in mandatory_text
-            for marker in (" o ", "alternativamente", "equivalente", "cualquiera de")
-        )
-        if alternative:
-            return Evidence(
-                Compatibility.COMPATIBLE.value,
-                ", ".join(mandatory_accepted[:3]),
+    # Judge each requirement sentence on its own.  Joining every sentence of a
+    # document made a multi-post call (an A2 post asking for a degree and an
+    # administrative C1 post asking for Bachiller) look like "degree *or*
+    # Bachiller" and therefore compatible.
+    compatible_terms: list[str] = []
+    university_only: list[str] = []
+    mixed_without_alternative = False
+    for sentence in mandatory_sentences:
+        accepted_here = [term for term in ACCEPTED_QUALIFICATIONS if term in sentence]
+        university_here = [term for term in UNIVERSITY_TERMS if term in sentence]
+        if accepted_here and not university_here:
+            compatible_terms.extend(accepted_here)
+        elif accepted_here and university_here:
+            alternative = any(
+                marker in sentence
+                for marker in (" o ", "alternativamente", "equivalente", "cualquiera de")
             )
+            if alternative:
+                compatible_terms.extend(accepted_here)
+            else:
+                mixed_without_alternative = True
+        elif university_here:
+            university_only.extend(university_here)
+    compatible_terms = list(dict.fromkeys(compatible_terms))
+    university_only = list(dict.fromkeys(university_only))
+    if compatible_terms and university_only:
+        return Evidence(
+            Compatibility.REVIEW.value,
+            "El documento exige titulaciones distintas en distintos requisitos "
+            "(posible convocatoria de varias plazas); comprueba la de este puesto",
+        )
+    if compatible_terms:
+        return Evidence(Compatibility.COMPATIBLE.value, ", ".join(compatible_terms[:3]))
+    if mixed_without_alternative:
         return Evidence(
             Compatibility.REVIEW.value,
             "El requisito obligatorio mezcla titulaciones universitarias y de FP sin alternativa clara",
         )
-    if mandatory_accepted:
-        return Evidence(
-            Compatibility.COMPATIBLE.value, ", ".join(mandatory_accepted[:3])
-        )
+    if university_only:
+        return Evidence(Compatibility.NOT_COMPATIBLE.value, ", ".join(university_only[:3]))
 
     non_requirement_markers = (
         "merito",
@@ -378,12 +424,7 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
             include = False
             reasons.append("las bases no confirman DAM/DAW/ASIR o familia informatica")
     if config.get("eligibility.require_it_role_in_title", False):
-        role = normalize_text(candidate.title)
-        it_role = bool(re.search(
-            r"\b(?:tecnic[oa](?: a)?|auxiliar|ayudante|operador|programador|analista|administrador|soporte|desarrollador)\b.*\b(?:informatic[oa]s?|sistemas|tic|software|aplicaciones)\b",
-            role,
-        )) or is_tai(role)
-        if not it_role:
+        if not is_it_role_title(candidate.title):
             include = False
             reasons.append("el titulo no identifica un puesto informatico del perfil")
     allowed_groups = config.get("eligibility.allowed_groups", [])
@@ -428,6 +469,39 @@ def can_apply(candidate: Candidate, today: date) -> bool:
     except ValueError:
         return False
     return True
+
+
+_SOURCE_BULLETIN = {"boe": "BOE", "boja": "BOJA", "bop_jaen": "BOP"}
+
+
+def deadline_window_open(candidate: Candidate, today: date) -> bool:
+    """Whether an official *relative* deadline may still be running.
+
+    Calls usually say "20 días hábiles desde la publicación del extracto en el
+    BOE" instead of a date.  This is an estimate used only to raise a REVISAR
+    notice (never a confirmed opportunity): working days are approximated as
+    7/5 calendar days plus holidays, with a wider margin when the period starts
+    with a different, later bulletin.
+    """
+    relative = candidate.raw.get("relative_deadline") if isinstance(candidate.raw, dict) else None
+    if not relative or candidate.deadline_confirmed:
+        return False
+    if candidate.status not in {ProcessStatus.OPEN, ProcessStatus.REOPENED, ProcessStatus.ANNOUNCED, ProcessStatus.DETECTED}:
+        return False
+    if candidate.access is AccessType.INTERNAL_ONLY or not candidate.publication_date:
+        return False
+    try:
+        published = date.fromisoformat(candidate.publication_date)
+        days = int(relative.get("days") or 0)
+    except (TypeError, ValueError):
+        return False
+    if published > today or days <= 0:
+        return False
+    calendar_days = days if relative.get("kind") == "naturales" else -(-days * 7 // 5) + 4
+    starts_after = relative.get("starts_after") or ""
+    own_bulletin = _SOURCE_BULLETIN.get(candidate.source, "")
+    margin = 3 if starts_after and starts_after == own_bulletin else 20
+    return (today - published).days <= calendar_days + margin
 
 
 def reviewable(candidate: Candidate, config: AppConfig) -> bool:

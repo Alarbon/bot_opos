@@ -24,13 +24,51 @@ def create_report(metrics: dict, status: str, env: dict) -> dict:
     }
 
 
+def collection_outcome(collection: dict | None) -> str:
+    """OK / PARTIAL / NO_SOURCES / MISSING, also for reports of older runs."""
+    if collection is None:
+        return "MISSING"
+    if collection.get("outcome"):
+        return str(collection["outcome"])
+    attempted = int(collection.get("sources_attempted") or 0)
+    errors = collection.get("errors") or {}
+    if attempted and len(errors) >= attempted:
+        return "NO_SOURCES"
+    return "PARTIAL" if errors or collection.get("warnings") else "OK"
+
+
+def _brief(detail: str) -> str:
+    """Short, user-facing reason; full tracebacks stay in the GitHub log."""
+    text = str(detail)
+    for needle, label in (
+        ("ResponseTooLarge", "documento demasiado grande"),
+        ("too many 500", "el servidor oficial devolvió errores 500"),
+        ("ConnectTimeout", "tiempo de conexión agotado"),
+        ("ReadTimeout", "tiempo de respuesta agotado"),
+        ("ConnectionError", "sin conexión con el servidor"),
+        ("403", "acceso rechazado (403)"),
+        ("404", "página no encontrada (404)"),
+    ):
+        if needle in text:
+            return f"{label}. Detalle: {text[:140]}"
+    return text[:200]
+
+
 def render_report(report: dict) -> str:
     failed = report["status"] != "success"
     collection = report.get("collection")
     errors = (collection or {}).get("errors", {})
     warnings = (collection or {}).get("warnings", {})
     delivery_problem = any((report.get("delivery") or {}).get(key, 0) for key in ("retryable", "uncertain"))
-    heading = "❌ BÚSQUEDA FALLIDA" if failed else "⚠️ BÚSQUEDA TERMINADA CON COBERTURA INCOMPLETA" if errors else "⚠️ BÚSQUEDA COMPLETADA CON AVISOS DE COBERTURA" if warnings else "⚠️ BÚSQUEDA TERMINADA CON AVISOS PENDIENTES" if delivery_problem else "✅ BÚSQUEDA COMPLETADA"
+    no_sources = collection_outcome(collection) == "NO_SOURCES"
+    heading = (
+        "❌ BÚSQUEDA FALLIDA" if failed
+        else "❌ NINGUNA FUENTE CONSULTADA — NO SIGNIFICA «SIN NOVEDADES»" if no_sources
+        else "⚠️ BÚSQUEDA TERMINADA CON COBERTURA INCOMPLETA" if errors
+        else "⚠️ BÚSQUEDA COMPLETADA CON AVISOS DE COBERTURA" if warnings
+        else "⚠️ BÚSQUEDA TERMINADA CON AVISOS PENDIENTES" if delivery_problem
+        else "✅ BÚSQUEDA COMPLETADA"
+    )
     lines = [heading, "Automática" if report["event"] == "schedule" else "Manual", ""]
     if collection is None:
         lines.append("No se completó la consulta de fuentes. Revisa la ejecución.")
@@ -42,14 +80,32 @@ def render_report(report: dict) -> str:
             f'Registros examinados: {collection.get("fetched", 0)}.',
             f'Procesos nuevos registrados: {collection.get("created", 0)}; actualizados: {collection.get("updated", 0)}.',
         ])
+        if "compatible" in collection:
+            lines.append(
+                f'Clasificación de lo incluido: {collection.get("compatible", 0)} compatibles, '
+                f'{collection.get("review", 0)} por revisar, '
+                f'{collection.get("not_compatible", 0)} ya registrados que ahora no cumplen el perfil.'
+            )
+        if collection.get("silent_new"):
+            lines.append(
+                f'{collection["silent_new"]} proceso(s) nuevo(s) sin aviso individual '
+                "(sin plazo de inscripción confirmado): revísalos en /convocatorias."
+            )
+        if collection.get("pending_notifications"):
+            lines.append(f'Avisos en cola antes del envío: {collection["pending_notifications"]}.')
+        if no_sources:
+            lines.append("No se pudo consultar ninguna fuente: no hay datos para afirmar que no haya novedades.")
         if errors:
-            lines.append("Fuentes pendientes: " + ", ".join(sorted(errors)))
+            lines.append("Fuentes fallidas (se reintentarán en la próxima búsqueda):")
+            lines.extend(f"- {name}: {_brief(detail)}" for name, detail in sorted(errors.items()))
         if warnings:
             lines.append("Avisos de cobertura:")
             lines.extend(f"- {name}: {detail}" for name, detail in sorted(warnings.items()))
     delivery = report.get("delivery")
     if delivery is not None:
         lines.append(f'Avisos de convocatorias enviados: {delivery.get("sent", 0)}; pendientes de reintento: {delivery.get("retryable", 0)}; entrega incierta: {delivery.get("uncertain", 0)}.')
+        if delivery.get("suppressed"):
+            lines.append(f'Avisos descartados antes de enviar (ya no cumplen el perfil o el plazo): {delivery["suppressed"]}.')
     else:
         lines.append("Entrega de avisos no completada o no registrada.")
     if report.get("started_at"):
@@ -59,7 +115,17 @@ def render_report(report: dict) -> str:
     if failed_steps:
         lines.append("Pasos fallidos: " + ", ".join(failed_steps))
     lines.extend(["", "/convocatorias para consultar las fichas; /estado para ver el resultado.", report["url"]])
-    return html.escape("\n".join(lines))
+    text = "\n".join(lines)
+    escaped = html.escape(text)
+    budget = 3400
+    while len(escaped) > 3900 and budget > 200:
+        # Telegram rejects messages over 4096 characters.  Cut the raw text
+        # (never the escaped one, so an entity is never split) until even the
+        # escaped form fits.
+        cut = text[:budget].rsplit("\n", 1)[0]
+        escaped = html.escape(cut + "\n… (detalle completo en GitHub)\n" + report["url"])
+        budget -= 400
+    return escaped
 
 
 def send_report(report: dict) -> None:
@@ -83,9 +149,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--status", required=True)
     parser.add_argument("--send", action="store_true")
+    parser.add_argument(
+        "--check-outcome",
+        action="store_true",
+        help="exit 1 when no source could be consulted (marks the run as failed)",
+    )
     args = parser.parse_args()
     path = Path("data/run_metrics.json")
     metrics = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    if args.check_outcome:
+        outcome = collection_outcome(metrics.get("collection"))
+        print(f"Resultado de la consulta: {outcome}")
+        raise SystemExit(1 if outcome in {"NO_SOURCES", "MISSING"} else 0)
     report = create_report(metrics, args.status, dict(os.environ))
     if args.send:
         send_report(report)

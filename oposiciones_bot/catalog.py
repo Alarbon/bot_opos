@@ -8,6 +8,7 @@ from pathlib import Path
 from .classifiers import can_apply, evaluate_candidate, reviewable, infer_status
 from .config import AppConfig
 from .db import SQLiteStore
+from .enrichment import extract_group
 from .normalization import utc_now_iso
 from .process_groups import martos_process_folder, document_milestone_date
 
@@ -19,7 +20,12 @@ def build_catalog(store: SQLiteStore, config: AppConfig, today: date) -> dict:
         if store.canonical_process_id(row["id"]) != row["id"]:
             continue
         candidate = store._candidate_from_process(store.connection, row)
-        aliases = [r["alias_id"] for r in store.connection.execute("SELECT alias_id FROM process_aliases WHERE process_id=?", (row["id"],))]
+        if not candidate.group:
+            # Rows stored before the corps-code fix ("B1.2000") have no group;
+            # derive it for display only.  The database row is left untouched
+            # and is corrected by the next observation of the process.
+            candidate.group = extract_group(candidate.title)
+        aliases =[r["alias_id"] for r in store.connection.execute("SELECT alias_id FROM process_aliases WHERE process_id=?", (row["id"],))]
         related_rows = [row, *(store.connection.execute("SELECT * FROM processes WHERE id=?", (alias,)).fetchone() for alias in aliases)]
         folder = next((martos_process_folder(link.url) for link in candidate.links if martos_process_folder(link.url)), None)
         if folder:

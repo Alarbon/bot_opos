@@ -1,5 +1,5 @@
 name: Buscar oposiciones
-run-name: Busqueda manual
+run-name: ${{ github.event_name == 'schedule' && 'Busqueda automatica programada' || 'Busqueda manual' }}
 
 on:
   workflow_dispatch:
@@ -9,6 +9,14 @@ on:
         required: false
         type: boolean
         default: false
+  # Daily search at 08:17 peninsular time.  GitHub cron uses UTC and ignores
+  # daylight saving time, so one cron is valid in summer (CEST, UTC+2) and the
+  # other in winter (CET, UTC+1); scripts/schedule_gate.py lets exactly one
+  # through.  Minute 17 avoids the congested top of the hour.  GitHub may delay
+  # or, under heavy load, drop scheduled runs: /buscar remains available.
+  schedule:
+    - cron: "17 6 * * *"
+    - cron: "17 7 * * *"
 
 permissions:
   contents: write
@@ -18,13 +26,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - name: Checkout gate script
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts/schedule_gate.py
+          sparse-checkout-cone-mode: false
+      - name: Comprobar franja horaria
+        id: decide
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: python3 scripts/schedule_gate.py
+
   search:
+    needs: gate
+    if: ${{ needs.gate.outputs.run == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # A run that waited in the concurrency queue must start from the
+          # state committed by the previous run, not from the commit that was
+          # current when it was requested (that caused rejected pushes).
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Python
@@ -42,20 +75,22 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
           python -m pytest -ra
+          node --test cloudflare-worker/src/index.test.mjs
 
       - name: Dry run
         if: ${{ inputs.dry_run == true }}
         env:
-          BOP_PROXY_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          BOP_PROXY_TOKEN: ${{ secrets.BOP_PROXY_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
         run: python main.py run --dry-run
 
       - name: Collect and enqueue
         id: collect
         if: ${{ inputs.dry_run != true }}
         env:
-          # El mismo secreto ya existe en GitHub y Cloudflare. Nunca se pasa
-          # al BOP ni se escribe en logs; solo autentica el proxy privado.
-          BOP_PROXY_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # Prefer the dedicated BOP_PROXY_TOKEN secret (same value in GitHub
+          # and Cloudflare).  The Telegram token is only a fallback for older
+          # deployments.  Never sent to the BOP and never written to logs.
+          BOP_PROXY_TOKEN: ${{ secrets.BOP_PROXY_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
         run: python main.py run --collect-only --metrics-file data/run_metrics.json
 
       - name: Persist collected state
@@ -138,3 +173,10 @@ jobs:
           SEND_OUTCOME: ${{ steps.send_telegram.outcome }}
           RECEIPTS_OUTCOME: ${{ steps.persist_receipts.outcome }}
         run: python scripts/run_report.py --status "$JOB_STATUS" --send
+
+      - name: Marcar fallo si no respondio ninguna fuente
+        # Runs last, after state and summary are saved: a run that could not
+        # consult a single source must show as failed in GitHub and /estado
+        # instead of a green "no news".
+        if: ${{ always() && !cancelled() && inputs.dry_run != true && steps.collect.outcome == 'success' }}
+        run: python scripts/run_report.py --status "${{ job.status }}" --check-outcome

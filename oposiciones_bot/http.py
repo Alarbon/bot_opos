@@ -47,16 +47,39 @@ class HttpClient:
             }
         )
 
-    def get(self, url: str, **kwargs: Any) -> requests.Response:
+    def get(self, url: str, *, max_bytes: int | None = None, **kwargs: Any) -> requests.Response:
+        """GET with retries and a hard size limit.
+
+        The body is streamed so an oversized document is rejected before it is
+        fully loaded into memory.  ``max_bytes`` lets a caller raise the limit
+        for a specific, trusted official document (for example a complete BOP
+        bulletin) without relaxing it for every source.
+        """
+        limit = int(max_bytes or self.settings.max_bytes)
         timeout = kwargs.pop("timeout", self.settings.timeout)
-        response = self.session.get(url, timeout=timeout, **kwargs)
-        response.raise_for_status()
-        length = response.headers.get("Content-Length")
-        if length and int(length) > self.settings.max_bytes:
+        response = self.session.get(url, timeout=timeout, stream=True, **kwargs)
+        try:
+            response.raise_for_status()
+            length = response.headers.get("Content-Length")
+            if length and length.isdigit() and int(length) > limit:
+                raise ResponseTooLarge(
+                    f"Respuesta superior al limite permitido ({int(length)} > {limit} bytes): {url}"
+                )
+            chunks: list[bytes] = []
+            size = 0
+            for chunk in response.iter_content(chunk_size=65536):
+                size += len(chunk)
+                if size > limit:
+                    raise ResponseTooLarge(
+                        f"Respuesta superior al limite permitido (> {limit} bytes): {url}"
+                    )
+                chunks.append(chunk)
+            # Later ``.content``/``.text``/``.json()`` calls reuse this body.
+            response._content = b"".join(chunks)
+            response._content_consumed = True
+        except Exception:
             response.close()
-            raise ResponseTooLarge(f"Respuesta superior al limite permitido: {url}")
-        if len(response.content) > self.settings.max_bytes:
-            raise ResponseTooLarge(f"Respuesta superior al limite permitido: {url}")
+            raise
         return response
 
     def get_json(self, url: str, **kwargs: Any) -> Any:
@@ -75,8 +98,8 @@ class HttpClient:
             response.encoding = response.apparent_encoding or "utf-8"
         return response.text
 
-    def get_bytes(self, url: str, **kwargs: Any) -> bytes:
-        return self.get(url, **kwargs).content
+    def get_bytes(self, url: str, *, max_bytes: int | None = None, **kwargs: Any) -> bytes:
+        return self.get(url, max_bytes=max_bytes, **kwargs).content
 
     def close(self) -> None:
         self.session.close()

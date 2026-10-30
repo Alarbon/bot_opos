@@ -31,6 +31,7 @@ class DiputacionJaenSource(SourceAdapter):
         payload = self.client.get_json(self.endpoint)
         records = self._records(payload)
         candidates: list[Candidate] = []
+        missing_details: list[str] = []
         for item in records:
             title = clean_text(
                 str(self._value(item, "titulo", "title", "descripcion") or "")
@@ -67,6 +68,7 @@ class DiputacionJaenSource(SourceAdapter):
                     self.detail_endpoint.format(slug=quote(slug, safe="~_-"))
                 )
             except Exception as exc:
+                missing_details.append(item_id)
                 LOGGER.warning("Diputacion Jaen: detalle %s no disponible: %s", item_id, exc)
             detail_text = html_to_text(
                 str(self._value(detail, "descripcion", "contenido") or "")
@@ -131,6 +133,12 @@ class DiputacionJaenSource(SourceAdapter):
                 raw={"topic": topic, "detail": detail},
             )
             candidates.append(enrich_candidate(candidate))
+        if missing_details:
+            # The notice is kept, but its requirements could not be read.
+            self.coverage_warning = (
+                f"Diputación de Jaén: {len(missing_details)} anuncio(s) sin detalle "
+                f"(ids {', '.join(missing_details[:5])}); clasificados con la información del listado"
+            )
         return candidates
 
     @staticmethod

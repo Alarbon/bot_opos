@@ -37,6 +37,53 @@ from .normalization import (
 
 
 SCHEMA_VERSION = 6
+MAX_DELIVERY_ATTEMPTS = 5
+
+_DETAIL_FIELDS = (
+    "deadline", "deadline_confirmed", "exam_date", "exam_time", "exam_place",
+    "status", "positions", "access", "compatibility", "group", "qualification",
+)
+
+
+def change_details(
+    old: dict[str, Any],
+    new: dict[str, Any],
+    *,
+    source_url: str = "",
+    source_reference: str = "",
+    observed_at: str = "",
+) -> list[dict[str, Any]]:
+    """Old and new value of each material field, with the source document."""
+    details = []
+    for key in _DETAIL_FIELDS:
+        if key in new and old.get(key) != new.get(key):
+            details.append(
+                {
+                    "field": key,
+                    "label": changed_fields({key: None}, {key: True})[0],
+                    "old": old.get(key),
+                    "new": new.get(key),
+                    "source_url": source_url,
+                    "source_reference": source_reference,
+                    "observed_at": observed_at,
+                }
+            )
+    return details
+
+
+def merge_change_details(
+    previous: list[dict[str, Any]], current: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Keep the first old value and the latest new value per field."""
+    merged: dict[str, dict[str, Any]] = {
+        item["field"]: dict(item) for item in previous if "field" in item
+    }
+    for item in current:
+        if item["field"] in merged:
+            merged[item["field"]] = {**item, "old": merged[item["field"]]["old"]}
+        else:
+            merged[item["field"]] = dict(item)
+    return [item for item in merged.values() if item.get("old") != item.get("new")]
 
 
 SCHEMA = """
@@ -579,12 +626,20 @@ class SQLiteStore:
         return merged
 
     @staticmethod
-    def _payload(candidate: Candidate, process_id: str, changes: list[str]) -> dict[str, Any]:
-        return {
+    def _payload(
+        candidate: Candidate,
+        process_id: str,
+        changes: list[str],
+        details: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
             "process_id": process_id,
             "candidate": candidate.to_dict(),
             "changes": changes,
         }
+        if details:
+            payload["change_details"] = details
+        return payload
 
     @staticmethod
     def _material_notice_change(candidate: Candidate) -> str | None:
@@ -655,7 +710,13 @@ class SQLiteStore:
         *,
         notify: bool = True,
         now: str | None = None,
+        force_review: bool = False,
     ) -> IngestResult:
+        """Persist one observation.
+
+        ``force_review`` creates a REVISAR notice instead of a confirmed one
+        (used when the application period is only known as a relative term).
+        """
         now = now or utc_now_iso()
         raw_hash = stable_hash(candidate.to_dict())
         with self.transaction() as db:
@@ -721,7 +782,7 @@ class SQLiteStore:
                 if notify:
                     kind = (
                         EventKind.REVIEW
-                        if candidate.compatibility is Compatibility.REVIEW
+                        if candidate.compatibility is Compatibility.REVIEW or force_review
                         else EventKind.NEW
                     )
                     event_id = self._insert_event(
@@ -738,6 +799,13 @@ class SQLiteStore:
                 old_snapshot = json.loads(existing["snapshot_json"])
                 new_snapshot = semantic_snapshot(merged)
                 changes = changed_fields(old_snapshot, new_snapshot)
+                details = change_details(
+                    old_snapshot,
+                    new_snapshot,
+                    source_url=candidate.url,
+                    source_reference=candidate.reference or candidate.source_id,
+                    observed_at=now,
+                )
                 semantic_hash = stable_hash(new_snapshot)
                 event_id = None
                 action = "unchanged"
@@ -815,7 +883,7 @@ class SQLiteStore:
                             """,
                             (
                                 semantic_hash,
-                                canonical_json(self._payload(merged, process_id, changes)),
+                                canonical_json(self._payload(merged, process_id, changes, details)),
                                 event_id,
                             ),
                         )
@@ -842,6 +910,9 @@ class SQLiteStore:
                                 [*(previous_payload.get("changes") or []), *changes]
                             )
                         )
+                        combined_details = merge_change_details(
+                            previous_payload.get("change_details") or [], details
+                        )
                         db.execute(
                             """
                             UPDATE notification_outbox
@@ -854,6 +925,7 @@ class SQLiteStore:
                                         merged,
                                         process_id,
                                         combined_changes,
+                                        combined_details,
                                     )
                                 ),
                                 event_id,
@@ -874,7 +946,7 @@ class SQLiteStore:
                             process_id=process_id,
                             kind=EventKind.UPDATE,
                             relevant_hash=semantic_hash,
-                            payload=self._payload(merged, process_id, changes),
+                            payload=self._payload(merged, process_id, changes, details),
                             now=now,
                         )
                 else:
@@ -1112,15 +1184,32 @@ class SQLiteStore:
         sql += " ORDER BY created_at, event_id"
         return [dict(row) for row in self.connection.execute(sql, params).fetchall()]
 
-    def claim_outbox(self, limit: int = 20, now: str | None = None) -> list[str]:
+    def claim_outbox(
+        self,
+        limit: int = 20,
+        now: str | None = None,
+        max_attempts: int = MAX_DELIVERY_ATTEMPTS,
+    ) -> list[str]:
+        """Claim PENDING events and RETRYABLE ones below the attempt cap.
+
+        A message Telegram keeps rejecting (for example malformed HTML) stays
+        RETRYABLE and visible in ``outbox list`` but no longer consumes the
+        batch of every run; ``outbox retry`` re-queues it manually.
+        """
         now = now or utc_now_iso()
         with self.transaction() as db:
             rows = db.execute(
                 """
                 SELECT event_id FROM notification_outbox
-                WHERE status IN (?,?) ORDER BY created_at LIMIT ?
+                WHERE status=? OR (status=? AND attempts<?)
+                ORDER BY created_at LIMIT ?
                 """,
-                (OutboxStatus.PENDING.value, OutboxStatus.RETRYABLE.value, limit),
+                (
+                    OutboxStatus.PENDING.value,
+                    OutboxStatus.RETRYABLE.value,
+                    max_attempts,
+                    limit,
+                ),
             ).fetchall()
             ids = [str(row["event_id"]) for row in rows]
             for event_id in ids:

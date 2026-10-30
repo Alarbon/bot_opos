@@ -30,8 +30,15 @@ def extract_group(text: str) -> str:
     match = re.search(r"\b(?:subgrupo|grupo)\s*(a1|a2|b|c1|c2|e)\b", normalized)
     if match:
         return match.group(1).upper()
-    match = re.search(r"\b(a1|a2|c1|c2)\s*[./-]\s*\d{3,5}\b", normalized)
-    return match.group(1).upper() if match else ""
+    # Junta corps codes: "B1.2000" is group B (the FP Superior group), not a
+    # language level; language levels never carry a four-digit corps suffix.
+    # (``normalize_text`` turns "B1.2000" into "b1 2000"; the previous pattern
+    # required the dot and therefore never matched.)
+    match = re.search(r"\b(a1|a2|b1|c1|c2)\s?\d{4}\b", normalized)
+    if not match:
+        return ""
+    value = match.group(1).upper()
+    return "B" if value.startswith("B") else value
 
 
 def extract_positions(text: str) -> int | None:
@@ -47,6 +54,25 @@ def extract_positions(text: str) -> int | None:
         if match:
             value = match.group(1)
             return words.get(value, int(value) if value.isdigit() else None)
+    return None
+
+
+# A date right after these words is the date of a legal act or of a bulletin,
+# not an exam or an application deadline ("pruebas selectivas convocadas por
+# Resolución de 12/05/2026", "solicitudes ... publicada en el BOP de 02/10/2026").
+_ACT_DATE_MARKERS = re.compile(
+    r"resoluci[oó]n|decreto|\borden\b|acuerdo|boletin|bolet[ií]n|\bb\.?o\.?[epj]\b|"
+    r"\bboja\b|publicad[oa]s?|selectiv[oa]s|de fecha|firmad",
+    re.IGNORECASE,
+)
+
+
+def _first_clean_match(pattern: str, text: str, group: int = 1) -> re.Match[str] | None:
+    """First match whose text before the date does not describe a legal act."""
+    for match in re.finditer(pattern, text, re.IGNORECASE):
+        lead = text[match.start() : match.start(group)]
+        if not _ACT_DATE_MARKERS.search(lead):
+            return match
     return None
 
 
@@ -68,10 +94,53 @@ def extract_deadline(text: str) -> tuple[str | None, bool]:
         r"(\d{1,2}[/-]\d{1,2}[/-]\d{4})(?!\d)",
     )
     for pattern in patterns:
-        match = re.search(pattern, normalized, re.IGNORECASE)
+        match = _first_clean_match(pattern, normalized)
         if match:
             return parse_date(match.group(1)), True
     return None, False
+
+
+_NUMBER_WORDS = {
+    "cinco": 5, "diez": 10, "quince": 15, "veinte": 20, "treinta": 30,
+    "cuarenta": 40, "sesenta": 60, "un mes": 30,
+}
+
+
+def extract_relative_deadline(text: str) -> dict | None:
+    """Detect "N días hábiles/naturales desde la publicación ..." deadlines.
+
+    Most Spanish calls state the period relative to a later publication (often
+    the BOE extract), so no exact date exists in the document.  This returns
+    the official wording; it is never turned into a confirmed date.
+    """
+    normalized = clean_text(text)
+    match = re.search(
+        r"plazo[^.]{0,120}?\b(\d{1,2}|cinco|diez|quince|veinte|treinta|cuarenta|sesenta)"
+        r"\s+d[ií]as\s+(h[aá]biles|naturales)([^.]{0,220})",
+        normalized,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    tail = match.group(3)
+    if not re.search(r"publicaci[oó]n|siguiente", tail, re.IGNORECASE):
+        return None
+    raw_number = match.group(1).lower()
+    days = int(raw_number) if raw_number.isdigit() else _NUMBER_WORDS.get(raw_number)
+    if not days:
+        return None
+    kind = "habiles" if match.group(2).lower().startswith("h") else "naturales"
+    source = "BOE" if re.search(r"\bBOE\b|Bolet[ií]n Oficial del Estado", tail) else (
+        "BOJA" if re.search(r"\bBOJA\b|Junta de Andaluc", tail) else (
+            "BOP" if re.search(r"\bBOP\b|Provincia", tail) else ""
+        )
+    )
+    return {
+        "days": days,
+        "kind": kind,
+        "starts_after": source,
+        "text": clean_text(match.group(0))[:300],
+    }
 
 
 def extract_exam_date(text: str) -> str | None:
@@ -82,10 +151,25 @@ def extract_exam_date(text: str) -> str | None:
         r"(?<!\d)(\d{1,2}[/-]\d{1,2}[/-]\d{4})(?!\d)",
     )
     for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
+        match = _first_clean_match(pattern, text)
         if match:
             return parse_date(match.group(1))
     return None
+
+
+def exam_date_is_provisional(text: str) -> bool:
+    """Whether the exam announcement itself presents the date as tentative."""
+    marker = re.search(r"examen|ejercicio|prueba", text or "", re.IGNORECASE)
+    if not marker:
+        return False
+    context = normalize_text(text[max(0, marker.start() - 160) : marker.end() + 260])
+    return bool(
+        re.search(
+            r"\b(?:provisional(?:mente)?|previst[oa]|aproximad[oa]|orientativ[oa]|"
+            r"pendiente de confirmar|se comunicara|a determinar)\b",
+            context,
+        )
+    )
 
 
 def extract_exam_time(text: str) -> str | None:
@@ -167,8 +251,14 @@ def enrich_candidate(candidate: Candidate) -> Candidate:
         candidate.positions = extract_positions(text)
     if candidate.deadline is None:
         candidate.deadline, candidate.deadline_confirmed = extract_deadline(text)
+    if candidate.deadline is None and "relative_deadline" not in candidate.raw:
+        relative = extract_relative_deadline(text)
+        if relative:
+            candidate.raw["relative_deadline"] = relative
     if candidate.exam_date is None:
         candidate.exam_date = extract_exam_date(text)
+        if candidate.exam_date and exam_date_is_provisional(text):
+            candidate.raw["exam_date_provisional"] = True
     if candidate.exam_time is None:
         candidate.exam_time = extract_exam_time(text)
     if not candidate.exam_place:

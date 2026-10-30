@@ -128,7 +128,29 @@ def _run(args: argparse.Namespace) -> int:
                     today=today,
                 )
                 if args.metrics_file and not args.dry_run:
-                    _save_metrics(args.metrics_file, {"started_at": started_at, "collection": asdict(collection)})
+                    _save_metrics(args.metrics_file, {"started_at": started_at, "collection": collection.to_dict()})
+                for name, stats in collection.sources.items():
+                    LOGGER.info(
+                        "Fuente %s: estado=%s encontrados=%s incluidos=%s nuevos=%s duracion=%ss %s",
+                        name,
+                        stats.get("status"),
+                        stats.get("found"),
+                        stats.get("included"),
+                        stats.get("created"),
+                        stats.get("duration_seconds"),
+                        stats.get("detail") or "",
+                    )
+                LOGGER.info(
+                    "Resultado=%s compatibles=%s revisar=%s excluidos_ya_registrados=%s avisos_nuevos=%s nuevos_sin_aviso=%s pendientes=%s duracion=%ss",
+                    collection.outcome,
+                    collection.compatible,
+                    collection.review,
+                    collection.not_compatible,
+                    collection.notified_new,
+                    collection.silent_new,
+                    collection.pending_notifications,
+                    collection.duration_seconds,
+                )
                 LOGGER.info(
                     "Recogidas=%s incluidas=%s nuevas=%s actualizadas=%s sin_cambios=%s filtradas=%s recordatorios=%s avisos_cobertura=%s errores=%s",
                     collection.fetched,
@@ -161,7 +183,7 @@ def _run(args: argparse.Namespace) -> int:
                 "Faltan TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID; los avisos quedan PENDING"
             )
             return 0 if not args.dispatch_only else 2
-        sent = dispatch(store=store, telegram=telegram, limit=args.limit, config=config)
+        sent = dispatch(store=store, telegram=telegram, limit=args.limit, config=config, min_interval_seconds=float(config.get("notifications.min_interval_seconds", 1.0)))
         LOGGER.info(
             "Outbox reclamados=%s enviados=%s reintentables=%s inciertos=%s",
             sent.claimed,
@@ -212,11 +234,11 @@ def _outbox(args: argparse.Namespace) -> int:
                 )
                 LOGGER.error("Faltan TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID")
                 return 2
-            result = dispatch(store=store, telegram=telegram, event_ids=ids, config=config)
+            result = dispatch(store=store, telegram=telegram, event_ids=ids, config=config, min_interval_seconds=float(config.get("notifications.min_interval_seconds", 1.0)))
             if args.metrics_file:
                 _save_metrics(args.metrics_file, {"delivery": asdict(result)})
             print(
-                f"Enviados={result.sent} reintentables={result.retryable} inciertos={result.uncertain}"
+                f"Enviados={result.sent} reintentables={result.retryable} inciertos={result.uncertain} descartados={result.suppressed} devueltos_a_cola={result.released}"
             )
             return 0 if not result.uncertain else 3
         if args.outbox_command == "retry":

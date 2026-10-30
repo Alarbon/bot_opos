@@ -16,6 +16,11 @@ from .models import Candidate, EventKind
 class TelegramError(RuntimeError):
     """Fallo confirmado por Telegram; el evento se puede reintentar."""
 
+    def __init__(self, message: str, *, retry_after: int | None = None, status_code: int | None = None):
+        super().__init__(message)
+        self.retry_after = retry_after
+        self.status_code = status_code
+
 
 class TelegramAmbiguousError(RuntimeError):
     """No se sabe si Telegram acepto el mensaje; no se reintenta automaticamente."""
@@ -74,12 +79,19 @@ class TelegramClient:
         except ValueError as exc:
             if response.ok:
                 raise TelegramAmbiguousError("Telegram devolvio una respuesta no interpretable") from exc
-            raise TelegramError(f"Telegram respondio HTTP {response.status_code}") from exc
+            raise TelegramError(
+                f"Telegram respondio HTTP {response.status_code}",
+                status_code=response.status_code,
+            ) from exc
         if not response.ok or not data.get("ok"):
             description = str(data.get("description") or f"HTTP {response.status_code}")
             retry_after = (data.get("parameters") or {}).get("retry_after")
             suffix = f"; retry_after={retry_after}" if retry_after else ""
-            raise TelegramError(f"Telegram rechazo el envio: {description}{suffix}")
+            raise TelegramError(
+                f"Telegram rechazo el envio: {description}{suffix}",
+                retry_after=int(retry_after) if str(retry_after or "").isdigit() else None,
+                status_code=response.status_code,
+            )
         message_id = (data.get("result") or {}).get("message_id")
         return str(message_id or "")
 
@@ -113,6 +125,16 @@ def _date_es(value: str | None) -> str:
         return parsed.strftime("%d/%m/%Y")
     except ValueError:
         return value
+
+
+def _change_value(field: Any, value: Any) -> str:
+    if value is None or value == "":
+        return "sin dato"
+    if isinstance(value, bool):
+        return "sí" if value else "no"
+    if field in {"deadline", "exam_date"}:
+        return _date_es(str(value))
+    return str(value)
 
 
 def _safe_url(value: str) -> str:
@@ -155,30 +177,64 @@ def render_event(event: dict[str, Any]) -> str:
     lines.extend(
         [
             f"🎓 <b>Titulación:</b> {_e_limited(qualification, 600)}",
-            f"✅ <b>Compatibilidad DAM:</b> {_e(candidate.compatibility.value)}",
+            f"✅ <b>Titulación FP Superior:</b> {_e(candidate.compatibility.value)}",
         ]
     )
     if candidate.positions is not None:
         lines.append(f"👥 <b>Plazas:</b> {candidate.positions}")
     if candidate.group:
         lines.append(f"🏷 <b>Grupo:</b> {_e(candidate.group)}")
+    raw = candidate.raw if isinstance(candidate.raw, dict) else {}
+    relative = raw.get("relative_deadline") if isinstance(raw.get("relative_deadline"), dict) else None
+    if candidate.deadline:
+        deadline_text = _date_es(candidate.deadline) + (
+            "" if candidate.deadline_confirmed else " (sin confirmar)"
+        )
+    elif relative:
+        deadline_text = (
+            f"{relative.get('days')} días {'hábiles' if relative.get('kind') == 'habiles' else 'naturales'} "
+            f"desde la publicación{' en ' + relative['starts_after'] if relative.get('starts_after') else ''} "
+            "— fecha exacta sin confirmar; consúltala en las bases"
+        )
+    else:
+        deadline_text = "No indicada"
     lines.extend(
         [
             f"🚪 <b>Acceso:</b> {_e(candidate.access.value)}",
             f"📌 <b>Estado:</b> {_e(candidate.status.value)}",
             f"📅 <b>Publicación:</b> {_e(_date_es(candidate.publication_date))}",
-            f"⏳ <b>Fin de solicitudes:</b> {_e(_date_es(candidate.deadline))}",
+            f"⏳ <b>Fin de solicitudes:</b> {_e_limited(deadline_text, 300)}",
         ]
     )
     if candidate.exam_date:
-        lines.append(f"🗓 <b>Examen:</b> {_e(_date_es(candidate.exam_date))}")
+        provisional = " (provisional según el anuncio)" if raw.get("exam_date_provisional") else ""
+        lines.append(f"🗓 <b>Examen:</b> {_e(_date_es(candidate.exam_date))}{provisional}")
     if candidate.exam_time:
         lines.append(f"🕐 <b>Hora:</b> {_e(candidate.exam_time)}")
     if candidate.exam_place:
         lines.append(f"📌 <b>Lugar:</b> {_e_limited(candidate.exam_place, 400)}")
     lines.append(f"⭐ <b>Prioridad:</b> {'★' * max(1, min(candidate.priority, 5))}")
     changes = payload.get("changes") or []
-    if changes and kind is EventKind.UPDATE:
+    details = [item for item in payload.get("change_details") or [] if isinstance(item, dict)]
+    if details and kind is EventKind.UPDATE:
+        lines.extend(["", "<b>Cambios detectados:</b>"])
+        for item in details[:6]:
+            lines.append(
+                f"• {_e_limited(item.get('label') or item.get('field'), 60)}: "
+                f"{_e_limited(_change_value(item.get('field'), item.get('old')), 160)} → "
+                f"<b>{_e_limited(_change_value(item.get('field'), item.get('new')), 160)}</b>"
+            )
+        source = _safe_url(str(details[0].get("source_url") or ""))
+        reference = details[0].get("source_reference") or ""
+        if source and len(_e(source)) <= 1000:
+            lines.append(
+                f'📄 Documento que lo indica: <a href="{_e(source)}">'
+                f"{_e_limited(reference or 'fuente oficial', 80)}</a>"
+            )
+        other = [label for label in changes if label not in {item.get("label") for item in details}]
+        if other:
+            lines.append(f"Otros cambios: {_e_limited(', '.join(other), 300)}")
+    elif changes and kind is EventKind.UPDATE:
         lines.extend(
             ["", f"<b>Cambios:</b> {_e_limited(', '.join(changes), 500)}"]
         )

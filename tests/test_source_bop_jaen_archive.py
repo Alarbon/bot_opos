@@ -161,7 +161,7 @@ def test_fetch_window_returns_candidate_and_does_not_overstate_archive_coverage(
             self.search_calls.append((url, kwargs["params"]))
             return RESULTS_HTML
 
-        def get_bytes(self, url):
+        def get_bytes(self, url, **_kwargs):
             assert url == bulletin().pdf_url
             return b"%PDF-fixture"
 
@@ -203,7 +203,7 @@ def test_fetch_window_returns_empty_status_without_claiming_coverage(app_config)
         def get_text(self, _url, **_kwargs):
             return EMPTY_HTML
 
-        def get_bytes(self, _url):
+        def get_bytes(self, _url, **_kwargs):
             raise AssertionError("No debe descargar un PDF sin ejemplares")
 
     context = FetchContext(
@@ -229,7 +229,7 @@ def test_long_context_is_split_into_non_overlapping_ten_day_queries(app_config):
             calls.append([value for key, value in kwargs["params"] if key == "d"])
             return EMPTY_HTML
 
-        def get_bytes(self, _url):
+        def get_bytes(self, _url, **_kwargs):
             raise AssertionError
 
     context = FetchContext(
