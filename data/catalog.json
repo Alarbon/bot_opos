@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-10-30T18:14:11+00:00",
+  "generated_at": "2026-10-30T19:57:51+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
@@ -106,7 +106,7 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-30T18:13:51+00:00",
+      "last_seen": "2026-10-30T19:57:33+00:00",
       "last_changed": "2026-10-06T19:10:02+00:00",
       "history": [
         {
@@ -117,12 +117,297 @@
           ]
         }
       ]
+    },
+    {
+      "source": "diputacion_jaen",
+      "source_id": "e7a04e7c-2efd-4c03-9649-f53dd0870ece",
+      "title": "Anuncio del tribunal calificador para la provisión de una plaza de funcionarias/os de carrera de la Diputación de Jaén, denominación analista programadora/or mediante el sistema de oposición libre.",
+      "organisation": "Diputacion Provincial de Jaen",
+      "url": "https://sede.dipujaen.es/Tablon",
+      "publication_date": "2026-10-06",
+      "summary": "Puntuaciones obtenidas por las/os aspirantes que han superado el segundo ejercicio y plazo de alegaciones.",
+      "reference": "",
+      "official_references": [],
+      "links": [
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/7WtXblrtPXyP7z7r86uIwcL3be5xZlvEuAT70xu~qvqgdUH525xqAWnllcZeTKr3MYT5K7MhyDJCOW~2~dame_RpJ3VBO3FsH_bEmIxSgGCBYlL_CQsN2nddrASqo2hP0PlIV1lUwCc~gHI6jhG9qUd_~zFvr0wK1FI_uy7XAnQ-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/SwRucnBMGnY_4ClqDHi7hvaoTWONM_BGHAZDJI~wh22zI1Z7oMclo3PX~pruI4Zp7Kl~iYrqKuXdTB5QSJTQqWU9ZGRz_El3zAKsTbz_a6nVC46FxmR6sRAfzzGXQk7ZlA1ZMhV2T~qoYaEgb9Y1lLx4Ih2_iYizhNNnc3Xjnjc-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/Tablon",
+          "reference": "3415",
+          "label": "Tablon Diputacion de Jaen"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/6XG~8AVIKSDtxfuW1zRAJRVPv1ddiDLjQp7MNOv3MO6rh0fsYbGJEmYHTmnQ1qpDmtXTpXeAYzhn6DPyqFFiw24G7CzTik86Ss6LXD4hvVPxvT40qGdyi1xGdz4C0kBPhLJN3JBRHbHYCIzMGl8VuOdUmpzWjuPoVSPXbROg2OU-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/xUL5aXvKASquWkciv_njux0GPOfTP9DAgMi6~ZUwZAdQ4dNUtq9GK880XO6bIejIanEZ~EwZLXEsXgGgM~wmniF3GZE4kXMyB6AzVhpfhc1js9sFh3j78BYOWZryDHxapWCem_zuQrLqIsUBaijNHMBaos6ds4j6bc9zsxQ96ng-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/ksXizdg9KxDZwJWAWrTeJM6~W95I4Ztllf2~CpLwJr3MVL63MEVE~R2ZEvw4ODIajaMT3YZUk9IjDOab8dllJvc0CQ_gPgKchHICRwkqIEHYYkxha_Fv04N3SLkqop2GJgaRsT7z6jQQoXX3elxbXTW6LD1B9itxdxYN__crRqw-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/vQjNp7KoIb7wvm_VQdvPm~~KjZEpgWq9n~24PmXQp~0CMQnWGYIJXRvws8uAD8nudku~LKZENRnd2pZL8nb5hsxRccPSz7f~BUm32lzBRggf1EvvzVv2mLCql8IVV5BHQj6N1bxi5vpPRpuykuJ0l3zuS8PgaYEEacxue~lK1M8-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/k03edWLh9sj6V_Mt4pZ1hnBlQ7358s3qL_ca9~9TKVT~gnvXwiaMiZczvEz1N8zsg8k4zkTBx9fBLrpZRuO2nN1m2~XKAywzOiH1fnNQOfCkFnqgdqkhIf4ECaevPLEBgbGhvOq0FQGYWKJ9yLz3~Dcbavd_PCRNEHLUO3ForpI-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/l38AqSklPYcYqy~W1dgbJOnVHlgvhOGo60Z2cLZrgi4LUh8aMfuxXL9age8BIE9e9XfAxNQZiOxuIVDKuWI5ZFODxMRMavph8oHF1bPevmUtGslrw6JUeRIWReyjqjK_EF2gzwnxX9AlEzfOuCXtwi6Vl_frC5tBjrqOHxhRzzU-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/ErxtHJlbSCpcCBA_2I9w_CQdmJJajWVWljWFKRsqYmersZi9ZUkaOkb1HeKpUBey3bZ~77kYASryzKM7UsB1Ro16AbE0pYGEu9I8kUi8j3vuQeBuN0w_IeQciHgh8Vyb6beI78U~mVF53aW9gsCBTmTsVtA09XrirSB4Sx_i588-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/u~9gPxqumVd5ayipuqB8tT4Hd5HzHCKlgHMk1bcqY7N0wePi1QD6feXUfWlTQ~va1XPB0sK~ORv3TO_Qt4jYerjoWVOV2ocCIXmtpJz9IO4jqLGy5UzyITUClCmPBTtMcCDW~hem~wr_Xjl37HrSkXWCTL0FtIRxHK5DEUPcoLo-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/PyKZHLFfIA0XOm50~ZnmcoEYt49jgDgDvDxb9GHpFHpQdzhWBtGXZbQJIyepQwNPkugqK1CiVUxSZJ5bpQEWWh4~dvLR1yH4DExMDxscnaXPyZiOV3LJiFnmYBRD7up5Pi68kGoFvzdDthTNsAF9ccpBhfMbXYkWSWIbchtHEGo-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/gGIdalbOY8PhVyZwSkz7kaGriudTRobtQBXbQilCA0D2SOSPwZkChhhrjUtIWxQOHPzHqJ~lVglClH97y5d_Va5h_PS~tSaxtSFpyw7jA6hFEVuUv~u7NAJs2qXNZhE1VHMgCZZNi44XDHY_hZsETWqydplqpywbfznAf3pe0xM-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/PyPvAZ_Hsq21~q5JBR4pWqu5Fm595m0Ns_eainP9yw5VVlrdauCnANjEFoLeKRv1VJjvNKCpTy3byJl7gXz6kYZWJNv5HoGWIgHw72O_7JQi2gK4sGmyMFbvYp02_ZzqavG6VKm915iOdutUImoitiqB49Q32wIFvrVziv8sGhU-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/UKmOus_UCJvK5WTxIaExfsT4pCy3_B8eVoeXdHfg0HILHOHs5Sy9nbCzNaDW9rm2pFyg2S1_BrZ08RS7tmqB2aE8Uhsvrb_tRK7YgMAISUq14Y2NSj9KVsoreoApFpeJjj6RedRjNNxOg_JTyLgRfnEAKEWorSfGNhy5rSLn3gs-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/yWh2PO~R5loWrBev0MFGTZodyFR9WPU3kmh524SkintRjuPzPjDM1nEvTPdCD_x3yaAMibw8KFFlp4qlmO7kR_WOao5FCwnClTKpwzLoPZbDpy~Hwk_gA4sCLv6Wg_cE4Fq7SQtOlS0ilLSH8U0Mq4cDAcc5GBlahvVbck3b~N0-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/yc4J4jMXrBUJiFNfXGhwQV6hS_Q2XlQeik5Ce5eZDAtTM7inpZcZ5Hw2We2J1RwnvPKgzeGERF3BYy0BgtbY8fTXyyBY1e7_PwmuBK9K2kQ8KNE69nPFjVyqp8cgTHnzvH8q~2~ODZ0HBZBhMMBO_e09HtNwzM7qjAKRp1a9N_M-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/Svh4tUnOMANneaFpZHbiX0J0F0QCFXIeXyz9wCQXhmyOOAKAwDKyzbHzUzm7huv1_ym7EL4dmQknzt95FuwSyvHIzEJdFeaKn7M_9g4zrTwzxjgyqEAWKchsPEQ3UfEPqtyY_XO46vS4x~0yFiXXC4J0aJrEfCsl66EtctzrHGk-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/ZCTclLuJBAr6cURfBVHgm3RF6VkgsP3iM2oBa4t0RKCrO6zsALvckSfEBlcD_uCbEh_ZrobTc3QQopyq0g7~VGLOaUCyZiOFMWohbePzKCFpbFNRiDOmTtyo5nlWr~Unmp~6TS5jdPVeoovfJMU_7oqp2dL1BIjuip0iO~qcIbI-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/5e8FsPzonR1OPtUNuofxCHn0lqEbur2_DRK6z1l4A8Zgzl9i5J7UTZMNTR4iOmL6pLhyZnYOt5GW05Lmq2FAdMWm~av3vnU74hCrNNKUxBQxawT5hImAkxZryTkl3WyAj~t1UeB4RAAj0lHA1CU9CwsFJiair~VQBHPIpUN~JnY-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/Pqwmze30x8mmeVEAAZV1UeV_JBlqi2K6Oez~K7EuuNmtL8pptUCpyWXHDiVnejOYcR9LhR2Y9gjyylpUNhUP1oXQDcd7Oj~eUxfGEVxdx_gB7nDaEgujIgaOSGguki2sjP0jxrXFh_yLra_8agbNvtK4XNf5QVVJUnc0Ii0Zhdo-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/NGFcS2UDyJCXYgtyOfpF5OpBI9MngvNW_XG0y~_C7WliwLvwXLblA9IhABgS15cwpZs_usmN9yJRASgkeKb0OCVkj5r2UJIOAOwo31wDsW4v7EClTTlNmZ5M_EARy_gBf9bZ0wVWAYqah00Qly3ttuQAinire54cMAXV0mqKz68-",
+          "reference": "5B2C5D7646FB0D82F2575C6DCA7EA5B8",
+          "label": "anuncio_notas_segundo_examen_1AP.pdf"
+        },
+        {
+          "source": "diputacion_jaen",
+          "url": "https://sede.dipujaen.es/DocumentosAdjuntos/Slug/O_Bu1_Fo8LFR0K4SS4PQIF7X4mgT57EFbWSlQrkBQoxm98onSt0VKoFoBYnFged~t7qHhQlzDf7buLqvpHasc9zqLPDOJA6QeL33fqkmFRcwdFuOiIbPoy9mdw8ZS52vdBTVdwCo0zsZp0N3RvoaDeeSATTJWyUV94LvCF1e5ZA-",
+          "reference": "PM02GROV",
+          "label": "Anuncio publicado"
+        }
+      ],
+      "locality": "",
+      "province": "Jaen",
+      "scope": "Local",
+      "group": "",
+      "positions": 1,
+      "access": "LIBRE",
+      "qualification_text": "",
+      "compatibility": "REVISAR",
+      "deadline": null,
+      "deadline_confirmed": false,
+      "status": "NOTAS",
+      "exam_date": null,
+      "exam_time": null,
+      "exam_place": "",
+      "priority": 4,
+      "special_process": "",
+      "id": "e7a04e7c-2efd-4c03-9649-f53dd0870ece",
+      "aliases": [],
+      "category": "TRACKING",
+      "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
+      "followed": false,
+      "last_seen": "2026-10-07T09:23:31+00:00",
+      "last_changed": "2026-10-06T18:01:48+00:00",
+      "history": [
+        {
+          "date": "2026-10-06T17:37:53+00:00",
+          "kind": "REVIEW",
+          "changes": []
+        }
+      ]
+    },
+    {
+      "source": "iaap",
+      "source_id": "14f8ea07-79b5-4311-8623-a8bab4fc2f49",
+      "title": "C1.2003 Ayudantes técnicos - Opción Informática",
+      "organisation": "Iaap",
+      "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/c12003-ayudantes-tecnicos-opcion-informatica",
+      "publication_date": "2026-03-06",
+      "summary": "C1.2003 Ayudantes técnicos - Opción Informática Acceso libre C1.2003 Ayudantes técnicos - Opción Informática 2023 36 3 1 0 Convocatoria plazas adicionales",
+      "reference": "",
+      "official_references": [],
+      "links": [
+        {
+          "source": "iaap",
+          "url": "https://juntadeandalucia.es/eboja/2024/191/BOJA24-191-00031-51272-01_00308221.pdf",
+          "reference": "",
+          "label": "RESOLUCIÓN"
+        },
+        {
+          "source": "iaap",
+          "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/c12003-ayudantes-tecnicos-opcion-informatica",
+          "reference": "",
+          "label": "Fuente oficial"
+        },
+        {
+          "source": "iaap",
+          "url": "https://portalempleopublico.juntadeandalucia.es/sites/default/files/migracion_procesos/unique/Resolucion_DGRRHHYFP_Convocatoria_C1.2_AYTE._TECNIC.pdf",
+          "reference": "",
+          "label": "BOJA nº191 de 1 de octubre de 2024"
+        }
+      ],
+      "locality": "",
+      "province": "",
+      "scope": "Andalucia",
+      "group": "C1",
+      "positions": null,
+      "access": "LIBRE",
+      "qualification_text": "",
+      "compatibility": "REVISAR",
+      "deadline": null,
+      "deadline_confirmed": false,
+      "status": "CONVOCADA",
+      "exam_date": null,
+      "exam_time": null,
+      "exam_place": "",
+      "priority": 5,
+      "special_process": "JUNTA_INFORMATICA",
+      "id": "14f8ea07-79b5-4311-8623-a8bab4fc2f49",
+      "aliases": [],
+      "category": "REVIEW",
+      "review_reason": "titulacion compatible no confirmada",
+      "followed": false,
+      "last_seen": "2026-10-21T18:33:38+00:00",
+      "last_changed": "2026-10-06T17:37:07+00:00",
+      "history": []
+    },
+    {
+      "source": "iaap",
+      "source_id": "f65b4f61-c2b3-4ced-b55f-76063e9a9280",
+      "title": "B1.2000 Tecnologías de la Información y Comunicación",
+      "organisation": "Iaap",
+      "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/P2B12000",
+      "publication_date": "2026-06-10",
+      "summary": "B1.2000 Tecnologías de la Información y Comunicación Promoción interna B1.2000 Tecnologías de la Información y Comunicación 2023 19 1 0 0 En plazo de alegación al listado provisional de personas aprobadas",
+      "reference": "",
+      "official_references": [],
+      "links": [
+        {
+          "source": "iaap",
+          "url": "https://juntadeandalucia.es/eboja/2026/109/c01/BOJA26-210901-00032-7774-01_00339009.pdf",
+          "reference": "",
+          "label": "Resolución de 8 de junio de 2026, de la Dirección General de Recursos Humanos y…"
+        },
+        {
+          "source": "iaap",
+          "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/P2B12000",
+          "reference": "",
+          "label": "Fuente oficial"
+        }
+      ],
+      "locality": "",
+      "province": "",
+      "scope": "Andalucia",
+      "group": "B",
+      "positions": 2026,
+      "access": "MIXTO",
+      "qualification_text": "",
+      "compatibility": "REVISAR",
+      "deadline": "2026-06-10",
+      "deadline_confirmed": true,
+      "status": "CONVOCADA",
+      "exam_date": "2026-09-19",
+      "exam_time": null,
+      "exam_place": "",
+      "priority": 5,
+      "special_process": "JUNTA_INFORMATICA",
+      "id": "f65b4f61-c2b3-4ced-b55f-76063e9a9280",
+      "aliases": [],
+      "category": "TRACKING",
+      "review_reason": "titulacion compatible no confirmada",
+      "followed": false,
+      "last_seen": "2026-10-21T18:33:38+00:00",
+      "last_changed": "2026-10-06T17:37:07+00:00",
+      "history": []
     }
   ],
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-10-30T18:13:53+00:00",
+      "started_at": "2026-10-30T19:57:35+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
@@ -130,7 +415,7 @@
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-10-30T18:13:17+00:00",
+      "started_at": "2026-10-30T19:56:59+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
@@ -138,7 +423,7 @@
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-10-30T18:13:51+00:00",
+      "started_at": "2026-10-30T19:57:33+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
@@ -146,47 +431,47 @@
     },
     {
       "source": "boe",
-      "started_at": "2026-10-30T18:10:52+00:00",
-      "status": "ERROR",
-      "items_found": 0,
-      "error": "RetryError: HTTPSConnectionPool(host='www.boe.es', port=443): Max retries exceeded with url: /datosabiertos/api/boe/sumario/20261030 (Caused by ResponseError('too many 500 error responses'))",
-      "last_covered_through": "2026-10-21"
+      "started_at": "2026-10-30T19:54:37+00:00",
+      "status": "OK",
+      "items_found": 2,
+      "error": "",
+      "last_covered_through": "2026-10-30"
     },
     {
       "source": "boja",
-      "started_at": "2026-10-30T18:10:57+00:00",
+      "started_at": "2026-10-30T19:54:47+00:00",
       "status": "OK",
-      "items_found": 43,
+      "items_found": 4,
       "error": "",
       "last_covered_through": "2026-10-30"
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-10-30T18:11:22+00:00",
-      "status": "ERROR",
+      "started_at": "2026-10-30T19:54:53+00:00",
+      "status": "PARTIAL",
       "items_found": 0,
-      "error": "ResponseTooLarge: Respuesta superior al limite permitido: https://bophistorico.dipujaen.es/high.raw?id=0001747472&name=00000001.original.pdf&attachment=0001747472.pdf",
-      "last_covered_through": "2026-10-13"
+      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-29; 2026-10-30 pendiente de indexación",
+      "last_covered_through": "2026-10-29"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-10-30T18:14:03+00:00",
+      "started_at": "2026-10-30T19:57:46+00:00",
       "status": "OK",
-      "items_found": 1,
+      "items_found": 0,
       "error": "",
       "last_covered_through": "2026-10-30"
     },
     {
       "source": "iaap",
-      "started_at": "2026-10-30T18:11:31+00:00",
-      "status": "OK",
+      "started_at": "2026-10-30T19:55:14+00:00",
+      "status": "PARTIAL",
       "items_found": 0,
-      "error": "",
+      "error": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
       "last_covered_through": "2026-10-30"
     },
     {
       "source": "sas",
-      "started_at": "2026-10-30T18:10:44+00:00",
+      "started_at": "2026-10-30T19:54:28+00:00",
       "status": "OK",
       "items_found": 1,
       "error": "",
@@ -194,7 +479,7 @@
     },
     {
       "source": "universidad_jaen",
-      "started_at": "2026-10-30T18:14:05+00:00",
+      "started_at": "2026-10-30T19:57:47+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
