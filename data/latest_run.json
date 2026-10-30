@@ -1,18 +1,18 @@
 {
-  "run_id": "41118982815",
+  "run_id": "41120896665",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41118982815",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41120896665",
   "status": "success",
-  "finished_at": "2026-10-30T19:57:56.476660+00:00",
-  "started_at": "2026-10-30T20:54:28.954247+01:00",
+  "finished_at": "2026-10-30T20:11:58.645820+00:00",
+  "started_at": "2026-10-30T21:08:54.716984+01:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 11,
+    "fetched": 9,
     "included": 1,
     "created": 0,
     "updated": 0,
     "unchanged": 1,
-    "filtered": 10,
+    "filtered": 8,
     "reminders": 0,
     "errors": {},
     "warnings": {
@@ -25,7 +25,7 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 202.2,
+    "duration_seconds": 178.7,
     "sources": {
       "sas": {
         "window_start": "2026-10-30",
@@ -36,18 +36,18 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 8.6
+        "duration_seconds": 6.9
       },
       "boe": {
-        "window_start": "2026-10-21",
-        "found": 2,
+        "window_start": "2026-10-30",
+        "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 10.1
+        "duration_seconds": 5.2
       },
       "boja": {
         "window_start": "2026-10-30",
@@ -58,10 +58,10 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 5.4
+        "duration_seconds": 8.2
       },
       "bop_jaen": {
-        "window_start": "2026-10-13",
+        "window_start": "2026-10-29",
         "found": 0,
         "included": 0,
         "created": 0,
@@ -69,7 +69,7 @@
         "status": "PARTIAL",
         "covered_through": "2026-10-29",
         "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-29; 2026-10-30 pendiente de indexación",
-        "duration_seconds": 21.2
+        "duration_seconds": 4.5
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -80,7 +80,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
-        "duration_seconds": 105.5
+        "duration_seconds": 105.6
       },
       "ayuntamiento_martos": {
         "window_start": "2026-10-30",
@@ -91,7 +91,7 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 33.2
+        "duration_seconds": 31.9
       },
       "ayuntamiento_torredelcampo": {
         "window_start": "2026-10-30",
@@ -102,7 +102,7 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 2.4
+        "duration_seconds": 2.0
       },
       "ayuntamiento_jaen": {
         "window_start": "2026-10-30",
@@ -113,7 +113,7 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 10.8
+        "duration_seconds": 11.0
       },
       "diputacion_jaen": {
         "window_start": "2026-10-30",
@@ -124,7 +124,7 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 1.6
+        "duration_seconds": 1.5
       },
       "universidad_jaen": {
         "window_start": "2026-10-30",
@@ -135,7 +135,7 @@
         "status": "OK",
         "covered_through": "2026-10-30",
         "detail": "",
-        "duration_seconds": 3.4
+        "duration_seconds": 2.0
       }
     },
     "outcome": "PARTIAL"
