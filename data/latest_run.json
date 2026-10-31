@@ -1,10 +1,10 @@
 {
-  "run_id": "41120896665",
-  "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41120896665",
+  "run_id": "41206545866",
+  "event": "schedule",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41206545866",
   "status": "success",
-  "finished_at": "2026-10-30T20:11:58.645820+00:00",
-  "started_at": "2026-10-30T21:08:54.716984+01:00",
+  "finished_at": "2026-10-31T13:42:48.128628+00:00",
+  "started_at": "2026-10-31T14:39:47.209347+01:00",
   "collection": {
     "sources_attempted": 10,
     "fetched": 9,
@@ -16,7 +16,7 @@
     "reminders": 0,
     "errors": {},
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-29; 2026-10-30 pendiente de indexación",
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-10-31 pendiente de indexación",
       "iaap": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout"
     },
     "compatible": 0,
@@ -25,7 +25,7 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 178.7,
+    "duration_seconds": 176.1,
     "sources": {
       "sas": {
         "window_start": "2026-10-30",
@@ -34,9 +34,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 6.9
+        "duration_seconds": 6.8
       },
       "boe": {
         "window_start": "2026-10-30",
@@ -45,9 +45,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 5.2
+        "duration_seconds": 1.6
       },
       "boja": {
         "window_start": "2026-10-30",
@@ -56,7 +56,7 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
         "duration_seconds": 8.2
       },
@@ -67,9 +67,9 @@
         "created": 0,
         "updated": 0,
         "status": "PARTIAL",
-        "covered_through": "2026-10-29",
-        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-29; 2026-10-30 pendiente de indexación",
-        "duration_seconds": 4.5
+        "covered_through": "2026-10-30",
+        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-10-31 pendiente de indexación",
+        "duration_seconds": 5.0
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -80,7 +80,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
-        "duration_seconds": 105.6
+        "duration_seconds": 105.8
       },
       "ayuntamiento_martos": {
         "window_start": "2026-10-30",
@@ -89,9 +89,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 31.9
+        "duration_seconds": 31.7
       },
       "ayuntamiento_torredelcampo": {
         "window_start": "2026-10-30",
@@ -100,9 +100,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 2.0
+        "duration_seconds": 2.1
       },
       "ayuntamiento_jaen": {
         "window_start": "2026-10-30",
@@ -111,9 +111,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 11.0
+        "duration_seconds": 10.8
       },
       "diputacion_jaen": {
         "window_start": "2026-10-30",
@@ -122,9 +122,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 1.5
+        "duration_seconds": 1.4
       },
       "universidad_jaen": {
         "window_start": "2026-10-30",
@@ -133,9 +133,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-30",
+        "covered_through": "2026-10-31",
         "detail": "",
-        "duration_seconds": 2.0
+        "duration_seconds": 2.7
       }
     },
     "outcome": "PARTIAL"
