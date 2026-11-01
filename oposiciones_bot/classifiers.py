@@ -324,7 +324,7 @@ def infer_status(text: str) -> ProcessStatus:
         (("reapertura", "nuevo plazo"), ProcessStatus.REOPENED),
         (("propuesta de nombramiento",), ProcessStatus.APPOINTMENT_PROPOSED),
         (("eleccion de destinos", "destinos adjudicados"), ProcessStatus.DESTINATIONS),
-        (("calificaciones", "relacion de aprobados", "notas definitivas", "notas segundo examen", "notas del segundo", "notas primer examen"), ProcessStatus.MARKS),
+        (("calificaciones", "relacion de aprobados", "listado provisional de personas aprobadas", "autobaremo", "convocatoria plazas adicionales", "notas definitivas", "notas segundo examen", "notas del segundo", "notas primer examen"), ProcessStatus.MARKS),
         (
             (
                 "fecha de examen",
@@ -394,6 +394,8 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
         allow_standalone=bool(candidate.qualification_text),
     )
     candidate.compatibility = Compatibility(evidence.value)
+    if candidate.access is AccessType.INTERNAL_ONLY:
+        candidate.compatibility = Compatibility.NOT_COMPATIBLE
     milestone_text = candidate.raw.get("current_milestone_text") or " ".join([text, *(link.label.replace("_", " ") for link in candidate.links)])
     candidate.status = infer_status(milestone_text)
     geo = geographic_match(candidate, config)
@@ -438,7 +440,7 @@ def evaluate_candidate(candidate: Candidate, config: AppConfig) -> FilterDecisio
         reasons.append("sin senal suficiente de puesto informatico")
     if not geo:
         reasons.append("fuera del ambito geografico")
-    if candidate.compatibility is Compatibility.NOT_COMPATIBLE:
+    if evidence.value == Compatibility.NOT_COMPATIBLE.value:
         reasons.append("titulacion universitaria obligatoria")
     if candidate.access is AccessType.INTERNAL_ONLY:
         reasons.append("promocion interna exclusiva")

@@ -69,12 +69,12 @@ def build_catalog(store: SQLiteStore, config: AppConfig, today: date) -> dict:
             payload = json.loads(event["payload_json"])
             history.append({"date": event["created_at"], "kind": event["kind"], "changes": payload.get("changes", [])})
         data = candidate.to_dict()
-        if not decision.include:
+        if not decision.include and data["compatibility"] != "NO_COMPATIBLE":
             data["compatibility"] = "REVISAR"
         # No personal identifiers, tokens, raw documents or notification receipts.
         data.pop("raw", None)
         data.pop("full_text", None)
-        data.update(id=row["id"], aliases=aliases, category=category, review_reason=decision.reason if not decision.include else "", followed=followed, last_seen=max(r["last_seen"] for r in related_rows), last_changed=max(r["last_changed"] for r in related_rows), history=history)
+        data.update(id=row["id"], aliases=aliases, category=category, review_reason=decision.reason if not decision.include else "", followed=followed, last_seen=max(r["last_seen"] for r in related_rows), last_changed=max(r["last_changed"] for r in related_rows), history=history, exam_date_provisional=candidate.raw.get("exam_date_provisional"))
         processes.append(data)
     sources = [
         dict(row)

@@ -148,3 +148,58 @@ def test_boja_clamps_batch_size_and_crosses_year_boundary(
     assert client.calls[0]["params"]["size"] == 100
     assert client.calls[0]["params"]["date_from"] == "2025-12-27"
     assert client.calls[0]["params"]["date_to"] == "2026-01-03"
+
+
+import pytest
+import requests
+
+
+def test_empty_window_400_requires_validated_bounded_fallback(app_config):
+    class Client(FakePagedJSONClient):
+        def get_json(self, url, **kwargs):
+            if kwargs['params']['date_from'] == '2026-10-31':
+                self.calls.append({'url': url, 'params': dict(kwargs['params'])})
+                response = requests.Response()
+                response.status_code = 400
+                raise requests.HTTPError(response=response)
+            return super().get_json(url, **kwargs)
+    client = Client({0: {'total_hits': 1, 'results': [boja_item('disposition.2026.211.1', published='2026-10-30', summary='Convocatoria de informática')]}})
+    source = BOJASource(client)
+    assert source.fetch(FetchContext(date(2026, 11, 1), 1, {}, app_config)) == []
+    assert [c['params']['date_from'] for c in client.calls] == ['2026-10-31', '2026-10-24']
+
+
+@pytest.mark.parametrize('payload', [{}, {'results': {}, 'total_hits': 0}, {'results': [], 'total_hits': 3}, {'results': [{'dateUTC': '2026-10-30'}], 'total_hits': 1}, {'results': [boja_item('x', published='invalid', summary='informática')], 'total_hits': 1}])
+def test_boja_rejects_200_without_valid_extraction(app_config, payload):
+    with pytest.raises(ValueError):
+        BOJASource(FakePagedJSONClient({0: payload})).fetch(FetchContext(date(2026, 11, 1), 10, {}, app_config))
+
+
+def test_boja_400_retry_is_limited_and_pipeline_preserves_checkpoint(app_config, store):
+    from oposiciones_bot.pipeline import collect
+    class Client:
+        calls = 0
+        def get_json(self, *_args, **_kwargs):
+            self.calls += 1
+            response = requests.Response(); response.status_code = 400
+            raise requests.HTTPError(response=response)
+    run = store.start_source_run('boja')
+    store.finish_source_run(run, status='OK', covered_through=date(2026, 10, 30))
+    client = Client()
+    result = collect(config=app_config, store=store, client=client, sources=[(BOJASource(client), {})], today=date(2026, 11, 1))
+    assert client.calls == 2
+    assert result.sources['boja']['status'] == 'ERROR'
+    assert store.collection_checkpoint('boja') == date(2026, 10, 30)
+
+
+def test_boja_detects_pagination_loop(app_config):
+    item = boja_item('x', published='2026-10-30', summary='informática')
+    client = FakePagedJSONClient({0: {'total_hits': 3, 'results': [item]}, 1: {'total_hits': 3, 'results': [item]}})
+    with pytest.raises(ValueError, match='repetida'):
+        BOJASource(client).fetch(FetchContext(date(2026, 11, 1), 10, {'batch_size': 1}, app_config))
+
+
+def test_boja_missing_document_content_is_not_silent_empty_success(app_config):
+    client = FakePagedJSONClient({0: {"results": [boja_item("x", published="2026-10-30", summary="")], "total_hits": 1}})
+    with pytest.raises(ValueError, match="contenido clasificable"):
+        BOJASource(client).fetch(FetchContext(date(2026, 11, 1), 10, {}, app_config))

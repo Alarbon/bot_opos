@@ -57,7 +57,7 @@ class TelegramClient:
         self.settings = settings
         self.session = session or requests.Session()
 
-    def send(self, text: str) -> str:
+    def send(self, text: str, *, reply_markup: dict | None = None) -> str:
         url = f"https://api.telegram.org/bot{self.settings.token}/sendMessage"
         payload = {
             "chat_id": self.settings.chat_id,
@@ -65,6 +65,8 @@ class TelegramClient:
             "parse_mode": self.settings.parse_mode,
             "disable_web_page_preview": self.settings.disable_web_page_preview,
         }
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
         try:
             response = self.session.post(url, json=payload, timeout=self.settings.timeout)
         except (requests.Timeout, requests.ConnectionError) as exc:
@@ -98,6 +100,25 @@ class TelegramClient:
 
 def _e(value: Any) -> str:
     return html.escape(str(value or ""), quote=True)
+
+
+def event_keyboard(event: dict[str, Any]) -> dict | None:
+    """Persistent UUIDs work even after catalogue order changes."""
+    import re
+    payload = json.loads(event["payload_json"])
+    process_id = str(payload.get("process_id") or "")
+    if not re.fullmatch(r"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}", process_id):
+        return None
+    rows = [[{"text": "🔎 Ver detalles", "callback_data": f"d:{process_id}:a:1"}]]
+    # The Worker checks the current followed state; notification snapshots
+    # need not pretend to know it.
+    rows.append([{"text": "⭐ Seguir", "callback_data": f"f:{process_id}:a:1"}])
+    candidate = payload.get("candidate") or {}
+    url = _safe_url(str(candidate.get("url") or ""))
+    if url:
+        rows.append([{"text": "🔗 Fuente oficial", "url": url}])
+    rows.append([{"text": "📋 Copiar comando", "copy_text": {"text": f"/detalle {process_id}"}}])
+    return {"inline_keyboard": rows}
 
 
 def _e_limited(value: Any, max_escaped: int) -> str:

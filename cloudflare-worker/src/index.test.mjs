@@ -155,7 +155,7 @@ for (const [command, action] of [["/automatico_on", "enable"], ["/automatico_off
     };
     try {
       let pending;
-      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { text: command, chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { from: { id: 1 }, text: command, chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
       await pending;
       assert.equal(calls.length, 0);
       assert.equal(messages.length, 0);
@@ -201,7 +201,7 @@ for (const status of [200, 204, 403, 422, 500]) {
     const originalFetch = globalThis.fetch;
     const calls = mockGitHub({ dispatchStatus: status });
     try {
-      const response = await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+      const response = await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 } } });
       assert.equal(response.status, 200);
       assert.equal(calls.dispatches.length, 1);
       assert.deepEqual(calls.dispatches[0].inputs, { dry_run: false });
@@ -220,7 +220,7 @@ for (const state of ["queued", "in_progress", "waiting"]) {
     const originalFetch = globalThis.fetch;
     const calls = mockGitHub({ runs: [{ id: 9, status: state, created_at: "2026-10-30T07:30:00Z", html_url: "https://github.com/run/9" }] });
     try {
-      await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+      await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 } } });
       assert.equal(calls.dispatches.length, 0);
       assert.match(calls.messages[0], /Ya hay una búsqueda/);
       assert.match(calls.messages[0], /run\/9/);
@@ -232,7 +232,7 @@ test("/buscar still dispatches when the active-run check fails", async () => {
   const originalFetch = globalThis.fetch;
   const calls = mockGitHub({ runsStatus: 502 });
   try {
-    await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+    await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 } } });
     assert.equal(calls.dispatches.length, 1);
     assert.ok(calls.messages[0].startsWith("📨"));
   } finally { globalThis.fetch = originalFetch; }
@@ -250,7 +250,7 @@ test("/buscar network failure is reported as unknown, not as success", async () 
     return Response.json({ ok: true, result: {} });
   };
   try {
-    await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } });
+    await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 } } });
     assert.match(messages[0], /^❌/);
     assert.match(messages[0], /No sé si la solicitud llegó/);
   } finally { globalThis.fetch = originalFetch; }
@@ -261,12 +261,12 @@ test("edited, stale, foreign and unauthenticated updates never dispatch", async 
   const calls = mockGitHub();
   try {
     const now = Math.floor(Date.now() / 1000);
-    await sendUpdate({ edited_message: { text: "/buscar", chat: { id: 1 }, date: now } });
-    await sendUpdate({ message: { text: "/buscar", chat: { id: 1 }, date: now - 3600 } });
-    await sendUpdate({ message: { text: "/buscar", chat: { id: 2 }, date: now } });
-    const forbidden = await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } }, ENV, { "x-telegram-bot-api-secret-token": "wrong" });
+    await sendUpdate({ edited_message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 }, date: now } });
+    await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 }, date: now - 3600 } });
+    await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 2 }, date: now } });
+    const forbidden = await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 } } }, ENV, { "x-telegram-bot-api-secret-token": "wrong" });
     assert.equal(forbidden.status, 403);
-    const missing = await sendUpdate({ message: { text: "/buscar", chat: { id: 1 } } }, ENV, {});
+    const missing = await sendUpdate({ message: { from: { id: 1 }, text: "/buscar", chat: { id: 1 } } }, ENV, {});
     assert.equal(missing.status, 403);
     assert.equal(calls.dispatches.length, 0);
     assert.equal(calls.listings, 0);
@@ -274,7 +274,7 @@ test("edited, stale, foreign and unauthenticated updates never dispatch", async 
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("admin configure requires the webhook secret and subscribes only to new messages", async () => {
+test("admin configure requires the webhook secret and subscribes to messages and callbacks", async () => {
   const originalFetch = globalThis.fetch;
   const telegramCalls = [];
   globalThis.fetch = async (url, options) => {
@@ -288,7 +288,7 @@ test("admin configure requires the webhook secret and subscribes only to new mes
     const ok = await worker.fetch(new Request("https://example.com/admin/configure", { method: "POST", headers: { authorization: "Bearer test-secret" } }), ENV, {});
     assert.equal(ok.status, 200);
     const webhook = telegramCalls.find(([method]) => method === "setWebhook")[1];
-    assert.deepEqual(webhook.allowed_updates, ["message"]);
+    assert.deepEqual(webhook.allowed_updates, ["message", "callback_query"]);
     assert.equal(webhook.secret_token, "test-secret");
   } finally { globalThis.fetch = originalFetch; }
 });
@@ -310,12 +310,12 @@ test("/estado distinguishes requested, started, completed, successful and runnin
     return Response.json({ ok: true, result: {} });
   };
   try {
-    await sendUpdate({ message: { text: "/estado", chat: { id: 1 } } });
+    await sendUpdate({ message: { from: { id: 1 }, text: "/estado", chat: { id: 1 } } });
     const text = messages[0];
     assert.match(text, /Última solicitada: 30\/10\/26, 10:00:00 — ⏳ en cola \(manual\)/);
     assert.match(text, /Última iniciada: 30\/10\/26, 7:31:00/);
     assert.match(text, /Última completada: 30\/10\/26, 7:35:00 — ❌ fallida \(automática programada\)/);
-    assert.match(text, /Última correcta: 29\/10\/26, 18:04:00/);
+    assert.match(text, /Última correcta en GitHub: 29\/10\/26, 18:04:00/);
     assert.match(text, /Búsqueda en marcha: sí/);
     assert.match(text, /No se pudo consultar ninguna fuente/);
     assert.match(text, /Envío de avisos no registrado/);
@@ -334,7 +334,7 @@ for (const matchingReport of [true, false]) {
     };
     try {
       let pending;
-      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { text: "/estado", chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { from: { id: 1 }, text: "/estado", chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
       await pending;
       assert.match(messages[0], /automática programada/);
       assert.match(messages[0], /10:30:00/);
@@ -346,13 +346,15 @@ for (const matchingReport of [true, false]) {
 
 for (const command of ["/convocatorias", "/detalle", "/detalle aaaaaaaa", "/detalle bbbbbbbb", "/buscar aaaaaaaa", "/seguir aaaaaaaa", "/dejar aaaaaaaa", "/seguimientos"]) {
   test(`catalog command ${command}`, async () => {
+    const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(source + "\n//" + command).toString("base64")}`);
     const originalFetch = globalThis.fetch;
     const messages = [];
     const dispatches = [];
-    const process = { id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", aliases: ["bbbbbbbb-cccc-dddd-eeee-ffffffffffff"], title: "Técnico informático", organisation: "Martos", category: "REVIEW", followed: true, history: [], links: [], status: "DETECTADA" };
+    const process = { id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", aliases: ["bbbbbbbb-cccc-dddd-eeee-ffffffffffff"], title: "Técnico informático", organisation: "Martos", category: "REVIEW", followed: command.startsWith("/dejar ") || command === "/seguimientos", history: [], links: [], status: "DETECTADA" };
     globalThis.fetch = async (url, options) => {
       if (url.startsWith("https://raw.githubusercontent.com/")) return Response.json({ processes: [process], generated_at: "2026-10-06", sources: [] });
       if (url.startsWith("https://api.github.com/")) {
+        if (!options.body) return Response.json({ workflow_runs: [] });
         dispatches.push(JSON.parse(options.body));
         return Response.json({ html_url: "https://github.com/test/run" });
       }
@@ -361,13 +363,13 @@ for (const command of ["/convocatorias", "/detalle", "/detalle aaaaaaaa", "/deta
     };
     try {
       let pending;
-      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { text: command, chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+      await worker.fetch(new Request("https://example.com/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "secret" }, body: JSON.stringify({ message: { from: { id: 1 }, text: command, chat: { id: 1 } } }) }), { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
       await pending;
       assert.equal(messages.length, 1);
       assert.ok(!messages[0].startsWith("❌"));
       if (!command.startsWith("/seguir ") && !command.startsWith("/dejar ")) {
-        assert.ok(messages[0].includes("Municipio: No confirmado"));
-        assert.ok(messages[0].includes("Provincia: No confirmada") || messages[0].includes("Provincia: No confirmado"));
+        assert.ok(messages[0].includes("No confirmado"));
+        assert.ok(messages[0].includes("destino") || messages[0].includes("Destino"));
       }
       assert.equal(dispatches.length, command.startsWith("/seguir ") || command.startsWith("/dejar ") ? 1 : 0);
       if (dispatches.length) assert.equal(dispatches[0].inputs.process_id, process.id);
@@ -399,12 +401,12 @@ test("/convocatorias explains an official source delay without calling it failed
     await worker.fetch(new Request("https://example.com/telegram", {
       method: "POST",
       headers: { "x-telegram-bot-api-secret-token": "secret" },
-      body: JSON.stringify({ message: { text: "/convocatorias", chat: { id: 1 } } }),
+      body: JSON.stringify({ message: { from: { id: 1 }, text: "/convocatorias", chat: { id: 1 } } }),
     }), {
       WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test",
     }, { waitUntil(p) { pending = p; } });
     await pending;
-    assert.match(messages[0], /archivo oficial disponible hasta 2026-10-05/);
+    assert.match(messages[0], /cobertura hasta 05\/10\/2026/);
     assert.doesNotMatch(messages[0], /fuentes fallaron/i);
   } finally { globalThis.fetch = originalFetch; }
 });
@@ -439,7 +441,7 @@ test("/estado reports delayed coverage separately from failures", async () => {
     await worker.fetch(new Request("https://example.com/telegram", {
       method: "POST",
       headers: { "x-telegram-bot-api-secret-token": "secret" },
-      body: JSON.stringify({ message: { text: "/estado", chat: { id: 1 } } }),
+      body: JSON.stringify({ message: { from: { id: 1 }, text: "/estado", chat: { id: 1 } } }),
     }), {
       WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test",
     }, { waitUntil(p) { pending = p; } });
@@ -448,3 +450,167 @@ test("/estado reports delayed coverage separately from failures", async () => {
     assert.match(messages[0], /bop_jaen: archivo oficial disponible hasta 2026-10-05/);
   } finally { globalThis.fetch = originalFetch; }
 });
+
+
+let harnessSequence = 0;
+async function withBot(run, { followed = false, active = false, count = 6, hostile = false, catalogStatus = 200, envOverrides = {} } = {}) {
+  const { default: isolated } = await import(`data:text/javascript;base64,${Buffer.from(source + "\n//harness" + ++harnessSequence).toString("base64")}`);
+  const processes = Array.from({ length: count }, (_, i) => ({
+    id: `${String(i + 1).padStart(8, "0")}-1111-2222-3333-444444444444`, aliases: [],
+    title: hostile ? "<&>".repeat(1000) : `Técnico informático ${i + 1}`, organisation: hostile ? "&".repeat(2000) : "Ayuntamiento de Jaén",
+    qualification_text: hostile ? "<".repeat(2000) : "No verificada", scope: "Andalucía", category: "REVIEW", followed,
+    summary: hostile ? ">".repeat(2000) : "Requisitos pendientes", links: [], url: "https://www.juntadeandalucia.es/bases",
+  }));
+  const calls = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), body: options.body ? JSON.parse(options.body) : null, method: options.method || "GET" });
+    assert.ok(options.signal, "outbound request must have a timeout");
+    if (String(url).startsWith("https://raw.githubusercontent.com/")) return Response.json({ processes, generated_at: "2026-11-01T10:00:00Z" }, { status: catalogStatus });
+    if (String(url).includes("/runs?")) return Response.json({ workflow_runs: active ? [{ status: "queued" }] : [] });
+    if (String(url).includes("/dispatches")) return new Response(null, { status: 204 });
+    return Response.json({ ok: true, result: { message_id: 100 } });
+  };
+  async function update(value, secret = "secret") {
+    let pending;
+    const response = await isolated.fetch(new Request("https://test/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": secret }, body: JSON.stringify(value) }),
+      { WEBHOOK_SECRET: "secret", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test", ...envOverrides }, { waitUntil(p) { pending = p; } });
+    if (pending) await pending;
+    return response;
+  }
+  const click = (data, user = 1, chat = 1) => update({ callback_query: { id: `query${calls.length}`, from: { id: user }, data, message: { message_id: 70, date: 1, chat: { id: chat } } } });
+  try { await run({ calls, processes, click, update }); } finally { globalThis.fetch = original; }
+}
+const apiCalls = (calls, method) => calls.filter(c => c.url.endsWith(`/${method}`));
+
+test("catalog pagination edits one message and retains full stable IDs", () => withBot(async ({ calls, click, processes }) => {
+  await click("l:a:1");
+  const first = apiCalls(calls, "editMessageText")[0].body;
+  assert.equal(first.parse_mode, "HTML");
+  assert.match(first.text, /Página 1\/2/);
+  const rows = first.reply_markup.inline_keyboard;
+  assert.equal(rows[0][0].callback_data, `d:${processes[0].id}:a:1`);
+  assert.equal(rows[5][0].callback_data, "l:a:2");
+  await click("l:a:2");
+  assert.match(apiCalls(calls, "editMessageText")[1].body.text, /Página 2\/2/);
+  assert.equal(apiCalls(calls, "editMessageText")[1].body.reply_markup.inline_keyboard[1][0].callback_data, "l:a:1");
+  assert.equal(apiCalls(calls, "sendMessage").length, 0);
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+}));
+
+test("details answer the callback before reading catalogue, source and full copy command work", () => withBot(async ({ calls, click, processes }) => {
+  await click(`d:${processes[0].id}:f:1`);
+  assert.match(calls[0].url, /answerCallbackQuery$/);
+  const message = apiCalls(calls, "editMessageText")[0].body;
+  const buttons = message.reply_markup.inline_keyboard.flat();
+  assert.ok(buttons.some(b => b.url === processes[0].url));
+  assert.ok(buttons.some(b => b.copy_text?.text === `/detalle ${processes[0].id}`));
+  assert.ok(buttons.some(b => b.callback_data === "l:f:1"));
+  for (const b of buttons) if (b.callback_data) assert.ok(Buffer.byteLength(b.callback_data) <= 64);
+  assert.equal(calls.filter(c => c.url.startsWith("https://api.github.com")).length, 0);
+}));
+
+for (const [user, chat] of [[9, 1], [1, 9]]) test(`callbacks authorize user ${user} and chat ${chat} before reads`, () => withBot(async ({ calls, click }) => {
+  await click("l:a:1", user, chat);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].body.text, "Acceso no autorizado");
+}));
+
+test("webhook authenticity also protects callback queries", () => withBot(async ({ calls, update }) => {
+  const response = await update({ callback_query: { data: "m:buscar" } }, "wrong");
+  assert.equal(response.status, 403); assert.equal(calls.length, 0);
+}));
+
+for (const bad of ["d:00000001:a:1", "d:" + "x".repeat(65), "l:a:0", "old-button"]) test(`invalid callback is answered and cannot dispatch: ${bad.slice(0, 20)}`, () => withBot(async ({ calls, click }) => {
+  await click(bad);
+  assert.equal(apiCalls(calls, "answerCallbackQuery").length, 1);
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+  assert.match(apiCalls(calls, "sendMessage")[0].body.text, /inválido|antiguo/);
+}));
+
+test("expired exact process IDs fail safely", () => withBot(async ({ calls, click }) => {
+  await click("d:99999999-1111-2222-3333-444444444444:a:1");
+  assert.match(apiCalls(calls, "sendMessage")[0].body.text, /ya no está disponible/);
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+}));
+
+for (const followed of [false, true]) test(`${followed ? "unfollow" : "follow"} uses its own workflow and suppresses double taps`, () => withBot(async ({ calls, click, processes }) => {
+  const action = `${followed ? "u" : "f"}:${processes[0].id}:a:1`;
+  await click(action); await click(action);
+  const dispatches = apiCalls(calls, "dispatches");
+  assert.equal(dispatches.length, 1);
+  assert.match(dispatches[0].url, /seguimiento.yml/);
+  assert.equal(dispatches[0].body.inputs.operation, followed ? "unfollow" : "follow");
+  assert.equal(dispatches[0].body.inputs.process_id, processes[0].id);
+  const replies = apiCalls(calls, "sendMessage");
+  assert.match(replies[0].body.text, /todavía no está confirmado/);
+  assert.match(replies[1].body.text, /pendiente/);
+}, { followed }));
+
+test("visible active tracking workflow suppresses changes across isolates", () => withBot(async ({ calls, click, processes }) => {
+  await click(`f:${processes[0].id}:a:1`);
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+  assert.match(apiCalls(calls, "sendMessage")[0].body.text, /en curso/);
+}, { active: true }));
+
+test("HTML hostile catalogue fields remain escaped and messages fit Telegram", () => withBot(async ({ calls, click, processes }) => {
+  await click("l:a:1"); await click(`d:${processes[0].id}:a:1`);
+  for (const call of apiCalls(calls, "editMessageText")) {
+    assert.ok(call.body.text.length < 4096);
+    assert.doesNotMatch(call.body.text, /<&>/);
+    assert.match(call.body.text, /&lt;|&amp;/);
+  }
+}, { hostile: true }));
+
+test("catalogue aliases resolve old message buttons without prefix guessing", () => withBot(async ({ calls, click, processes }) => {
+  const old = "abcdef01-1111-2222-3333-444444444444";
+  processes[0].aliases.push(old);
+  await click(`d:${old}:a:1`);
+  assert.equal(apiCalls(calls, "editMessageText").length, 1);
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+}));
+
+
+for (const state of ["OK", "PARTIAL", "NO_SOURCES"]) test(`/estado distinguishes source outcome ${state}`, async () => {
+  const original = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    if (String(url).startsWith("https://api.github.com/")) return Response.json({ workflow_runs: [{ id: 90, status: "completed", conclusion: "success", updated_at: "2026-11-01T10:00:00Z" }] });
+    if (String(url).startsWith("https://raw.githubusercontent.com/")) return Response.json({ run_id: 90, collection: { sources_attempted: 1, created: 0, updated: 0, errors: state === "NO_SOURCES" ? { boja: "400" } : {}, warnings: state === "PARTIAL" ? { iaap: "documento pendiente" } : {} } });
+    calls.push(JSON.parse(options.body)); return Response.json({ ok: true, result: {} });
+  };
+  try {
+    let pending;
+    await worker.fetch(new Request("https://test/telegram", { method: "POST", headers: { "x-telegram-bot-api-secret-token": "s" }, body: JSON.stringify({ message: { from: { id: 1 }, text: "/estado", chat: { id: 1 } } }) }),
+      { WEBHOOK_SECRET: "s", TELEGRAM_CHAT_ID: "1", TELEGRAM_BOT_TOKEN: "test", GITHUB_TOKEN: "test" }, { waitUntil(p) { pending = p; } });
+    await pending;
+    assert.match(calls[0].text, state === "OK" ? /correcta sin novedades/ : state === "PARTIAL" ? /cobertura parcial/ : /Búsqueda fallida/);
+    assert.equal(calls[0].parse_mode, "HTML");
+    assert.ok(calls[0].reply_markup);
+  } finally { globalThis.fetch = original; }
+});
+
+
+test("simultaneous follow callbacks in one isolate dispatch once", () => withBot(async ({ calls, click, processes }) => {
+  const action = `f:${processes[0].id}:a:1`;
+  await Promise.all([click(action), click(action)]);
+  assert.equal(apiCalls(calls, "answerCallbackQuery").length, 2);
+  assert.equal(apiCalls(calls, "dispatches").length, 1);
+}));
+
+for (const status of [404, 503]) test(`unavailable catalogue ${status} ends callback without dispatch`, () => withBot(async ({ calls, click }) => {
+  await click("l:a:1");
+  assert.equal(apiCalls(calls, "answerCallbackQuery").length, 1);
+  assert.match(apiCalls(calls, "sendMessage")[0].body.text, /Catálogo todavía no disponible/);
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+}, { catalogStatus: status }));
+
+for (const configured of [false, true]) test(`group callback requires explicit allowed user (${configured})`, () => withBot(async ({ calls, click }) => {
+  await click("l:a:1", 1, -100);
+  if (configured) assert.equal(apiCalls(calls, "editMessageText").length, 1);
+  else {
+    assert.equal(calls.length, 1);
+    assert.match(calls[0].body.text, /Acceso no autorizado/);
+  }
+  assert.equal(apiCalls(calls, "dispatches").length, 0);
+}, { envOverrides: { TELEGRAM_CHAT_ID: "-100", ...(configured ? { TELEGRAM_USER_ID: "1" } : {}) } }));

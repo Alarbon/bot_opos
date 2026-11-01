@@ -83,7 +83,7 @@ def test_old_pending_a2_notice_suppressed_before_send(candidate_factory, app_con
     app_config.data["eligibility"] = {"only_enrollable_new": True, "allowed_groups": ["B", "C1"]}
     store.ingest(candidate_factory(group="A2"), included_decision)
     class Telegram:
-        def send(self, text):
+        def send(self, text, **kwargs):
             raise AssertionError("No debe enviar un aviso A2")
     result = dispatch(store=store, telegram=Telegram(), config=app_config)
     assert result.sent == 0

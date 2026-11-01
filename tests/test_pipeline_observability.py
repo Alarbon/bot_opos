@@ -180,7 +180,7 @@ class FakeTelegram:
         self.outcomes = list(outcomes)
         self.sent = []
 
-    def send(self, text):
+    def send(self, text, **kwargs):
         outcome = self.outcomes.pop(0)
         if isinstance(outcome, Exception):
             raise outcome

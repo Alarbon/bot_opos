@@ -273,7 +273,7 @@ def test_generic_listing_failure_is_reported_as_partial_coverage(app_config):
     result = source.fetch(context(app_config, urls=["https://a.example/listado", "https://b.example/listado"]))
     assert result == []
     assert "b.example: ConnectTimeout" in source.coverage_warning
-    assert "1 de 2" in source.coverage_warning
+    assert "procesamiento parcial" in source.coverage_warning
 
 
 def test_generic_near_empty_page_is_not_silent_no_news(app_config):
@@ -299,3 +299,30 @@ def test_diputacion_missing_detail_is_reported(app_config):
     candidates = source.fetch(context(app_config, lookback=5))
     assert len(candidates) == 1
     assert "sin detalle" in source.coverage_warning
+
+
+def test_generic_failed_pdf_keeps_candidate_but_never_advances_checkpoint(app_config, store):
+    from oposiciones_bot.pipeline import collect
+    class Client(ListingClient):
+        def get_bytes(self, *_args, **_kwargs):
+            raise requests.ReadTimeout("document unavailable")
+    listing = LISTING.replace("</body>", '<article><a href="/bases.pdf">Convocatoria de técnico informático</a></article></body>')
+    source = GenericHTMLSource("iaap", Client({"https://a.example/": listing}))
+    run = store.start_source_run("iaap")
+    store.finish_source_run(run, status="OK", covered_through=date(2026, 10, 28))
+    result = collect(config=app_config, store=store, client=source.client, sources=[(source, {"urls": ["https://a.example/"]})], today=date(2026, 10, 29))
+    assert result.sources["iaap"]["status"] == "PARTIAL"
+    assert "PDF pendiente" in result.warnings["iaap"]
+    assert store.collection_checkpoint("iaap") == date(2026, 10, 28)
+
+
+def test_unrecognised_iaap_process_page_is_partial_not_verified_requirements(app_config):
+    url = "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos"
+    target = url + "/P2B12000"
+    listing = LISTING.replace("</body>", f'<article><a href="{target}">Convocatoria B1.2000 Tecnologías de la Información y Comunicación</a></article></body>')
+    source = GenericHTMLSource("iaap", ListingClient({url: listing, target: "<h1>Mantenimiento temporal</h1>"}))
+    items = source.fetch(context(app_config, urls=[url]))
+    assert len(items) == 1
+    assert "sin campos reconocidos" in source.coverage_warning
+    assert items[0].positions is None and not items[0].deadline_confirmed
+    assert items[0].full_text == ""

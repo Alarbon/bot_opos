@@ -41,6 +41,7 @@ class GenericHTMLSource(SourceAdapter):
         errors: list[Exception] = []
         self._failed_urls: list[str] = []
         suspicious_listings: list[str] = []
+        document_errors: list[str] = []
         successful_listings = 0
         for listing_url in context.source_config.get("urls", []):
             try:
@@ -80,11 +81,15 @@ class GenericHTMLSource(SourceAdapter):
                 full_text = ""
                 publication_date = self._publication_date(container)
                 detail_links: list[SourceLink] = []
+                detail_soup = None
                 if context.app_config.get("collection.fetch_document_text", True):
                     if self._is_pdf(href):
                         try:
                             full_text = pdf_to_text(self.client.get_bytes(href))
+                            if not full_text.strip():
+                                raise ValueError("PDF sin texto interpretable")
                         except Exception as exc:
+                            document_errors.append(f"PDF pendiente: {href} ({type(exc).__name__})")
                             LOGGER.warning("%s: PDF no extraible %s: %s", self.name, href, exc)
                     elif self._may_hydrate_html(listing_url, href):
                         try:
@@ -96,6 +101,7 @@ class GenericHTMLSource(SourceAdapter):
                             )
                             detail_links = self._document_links(detail_soup, href)
                         except Exception as exc:
+                            document_errors.append(f"Detalle pendiente: {href} ({type(exc).__name__})")
                             LOGGER.warning(
                                 "%s: detalle HTML no ampliable %s: %s",
                                 self.name,
@@ -116,17 +122,30 @@ class GenericHTMLSource(SourceAdapter):
                     links=[SourceLink(self.name, href, "", title), *detail_links],
                     raw={"listing_url": listing_url},
                 )
-                results.append(enrich_candidate(candidate))
+                candidate = enrich_candidate(candidate)
+                if self.name == "iaap" and detail_soup is not None:
+                    from .iaap_fields import apply_process_fields
+                    structured = apply_process_fields(candidate, detail_soup)
+                    if not structured and "portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/" in href:
+                        document_errors.append(f"Ficha IAAP sin campos reconocidos: {href}")
+                        # A maintenance/error page must not supply requirements.
+                        candidate.positions = None
+                        candidate.deadline = None
+                        candidate.deadline_confirmed = False
+                        candidate.qualification_text = ""
+                        candidate.full_text = ""
+                        from ..classifiers import classify_access
+                        candidate.access = classify_access(context_text)
+                results.append(candidate)
         if not successful_listings and errors:
             raise errors[0]
-        problems = [*self._failed_listing_notes(errors), *suspicious_listings]
+        problems = [*self._failed_listing_notes(errors), *suspicious_listings, *document_errors]
         if problems:
             # Some listings answered and others did not (or answered with an
             # unrecognisable page).  Report it instead of a silent "OK".
             self.coverage_warning = (
-                f"{self.name}: {len(problems)} de "
-                f"{len(context.source_config.get('urls', []))} listado(s) sin "
-                "consultar o con formato no reconocido: " + "; ".join(problems)
+                f"{self.name}: procesamiento parcial; listados o documentos "
+                "pendientes o con formato no reconocido: " + "; ".join(problems)
             )[:1500]
         if self.name == "ayuntamiento_martos":
             grouped: dict[str, list[Candidate]] = {}
@@ -213,7 +232,10 @@ class GenericHTMLSource(SourceAdapter):
                 for marker in ("views-row", "card", "resultado", "anuncio", "item", "filecontent")
             ):
                 return parent
-        return anchor.parent if isinstance(anchor.parent, Tag) else None
+        parent = anchor.parent
+        if isinstance(parent, Tag) and parent.name not in {"body", "html", "nav", "header", "footer"}:
+            return parent
+        return None
 
     @staticmethod
     def _is_pdf(url: str) -> bool:

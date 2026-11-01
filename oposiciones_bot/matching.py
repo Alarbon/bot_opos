@@ -51,6 +51,7 @@ def canonical_key(candidate: Candidate) -> str:
 
 def semantic_snapshot(candidate: Candidate) -> dict[str, Any]:
     return {
+        **({"exam_date_provisional": candidate.raw["exam_date_provisional"]} if "exam_date_provisional" in candidate.raw else {}),
         "positions": candidate.positions,
         "access": candidate.access.value,
         "qualification": normalize_text(candidate.qualification_text),
@@ -78,6 +79,7 @@ def changed_fields(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
         "deadline_confirmed": "confirmacion del plazo",
         "status": "estado del proceso",
         "exam_date": "fecha de examen",
+        "exam_date_provisional": "carácter provisional del examen",
         "exam_time": "hora de examen",
         "exam_place": "lugar de examen",
         "group": "grupo",

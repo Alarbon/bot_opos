@@ -41,7 +41,7 @@ MAX_DELIVERY_ATTEMPTS = 5
 
 _DETAIL_FIELDS = (
     "deadline", "deadline_confirmed", "exam_date", "exam_time", "exam_place",
-    "status", "positions", "access", "compatibility", "group", "qualification",
+    "status", "positions", "access", "compatibility", "group", "qualification", "exam_date_provisional",
 )
 
 
@@ -615,6 +615,9 @@ class SQLiteStore:
             merged.deadline_confirmed = bool(old["deadline_confirmed"])
         if not merged.exam_date:
             merged.exam_date = old["exam_date"]
+            old_snapshot = json.loads(old["snapshot_json"])
+            if "exam_date_provisional" in old_snapshot:
+                merged.raw["exam_date_provisional"] = old_snapshot["exam_date_provisional"]
         if not merged.exam_time:
             merged.exam_time = old["exam_time"]
         if not merged.exam_place:
@@ -623,6 +626,14 @@ class SQLiteStore:
         merged.priority = max(int(old["priority"]), merged.priority)
         merged.special_process = merged.special_process or old["special_process"]
         merged.url = merged.url or old["primary_url"]
+        if candidate.raw.get("structured_evidence"):
+            # Explicit structured fields may invalidate an earlier heuristic.
+            # Do not restore the erroneous date/year from the previous row.
+            merged.positions = candidate.positions
+            merged.publication_date = candidate.publication_date
+            merged.deadline = candidate.deadline
+            merged.deadline_confirmed = candidate.deadline_confirmed
+            merged.organisation = candidate.organisation
         return merged
 
     @staticmethod
@@ -814,7 +825,7 @@ class SQLiteStore:
                     db.execute(
                         """
                         UPDATE processes SET
-                            locality=?,province=?,scope=?,group_name=?,positions=?,access=?,
+                            organisation=?,normalised_organisation=?,locality=?,province=?,scope=?,group_name=?,positions=?,access=?,
                             qualification_text=?,compatibility=?,publication_date=?,deadline=?,
                             deadline_confirmed=?,status=?,exam_date=?,exam_time=?,exam_place=?,
                             summary=?,primary_url=?,
@@ -823,6 +834,8 @@ class SQLiteStore:
                         WHERE id=?
                         """,
                         (
+                            merged.organisation,
+                            normalize_text(merged.organisation),
                             merged.locality,
                             merged.province,
                             merged.scope,
@@ -1172,6 +1185,7 @@ class SQLiteStore:
             priority=int(row["priority"]),
             special_process=row["special_process"],
             links=[SourceLink(**link) for link in links],
+            raw={key: value for key, value in json.loads(row["snapshot_json"]).items() if key == "exam_date_provisional"},
         )
 
     def list_outbox(self, statuses: list[str] | None = None) -> list[dict[str, Any]]:

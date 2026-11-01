@@ -257,8 +257,8 @@ def enrich_candidate(candidate: Candidate) -> Candidate:
             candidate.raw["relative_deadline"] = relative
     if candidate.exam_date is None:
         candidate.exam_date = extract_exam_date(text)
-        if candidate.exam_date and exam_date_is_provisional(text):
-            candidate.raw["exam_date_provisional"] = True
+        if candidate.exam_date:
+            candidate.raw["exam_date_provisional"] = exam_date_is_provisional(text)
     if candidate.exam_time is None:
         candidate.exam_time = extract_exam_time(text)
     if not candidate.exam_place:

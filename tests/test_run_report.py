@@ -57,3 +57,22 @@ def test_delayed_official_source_is_transparent_but_not_failed():
     assert "9 al día / 1 con aviso de cobertura / 0 fallidas" in text
     assert detail in text
     assert "COBERTURA INCOMPLETA" not in text
+
+
+def test_no_news_is_explicit_and_summary_buttons_are_native(monkeypatch):
+    import json
+    module = load_module("run_report")
+    report = module.create_report({"collection": {"sources_attempted": 2, "created": 0, "updated": 0}}, "success", {})
+    assert "SIN NOVEDADES" in module.render_report(report)
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *_args): pass
+        def read(self): return b'{"ok":true}'
+    calls = []
+    def fake_open(request, **_kwargs):
+        calls.append(json.loads(request.data)); return Response()
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "1")
+    monkeypatch.setattr(module, "urlopen", fake_open)
+    module.send_report(report)
+    assert calls[0]["reply_markup"]["inline_keyboard"][0][0]["callback_data"] == "l:a:1"

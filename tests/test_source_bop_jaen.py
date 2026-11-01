@@ -178,3 +178,19 @@ def test_private_document_proxy_uses_only_day_and_numeric_edict():
 )
 def test_daily_html_must_prove_requested_date_coverage(html, accepted):
     assert BOPJaenSource._valid_daily_html(html, date(2026, 10, 6)) is accepted
+
+
+@pytest.mark.parametrize("empty", [True, False])
+def test_unreadable_edict_prevents_complete_coverage(app_config, monkeypatch, empty):
+    html = '<p class="subseccion">Ayuntamiento de Martos</p><article><span class="edicto">Convocatoria Técnico de Informática</span><a href="/descargarws.dip?fechaBoletin=2026-10-06&amp;numeroEdicto=123">PDF</a></article>'
+    class Client:
+        def get_text(self, *_args, **_kwargs): return html
+        def get_bytes(self, *_args, **_kwargs):
+            if empty: return b"fake PDF"
+            raise requests.ReadTimeout("document unavailable")
+    monkeypatch.setattr("oposiciones_bot.sources.bop_jaen.pdf_to_text", lambda _: "")
+    source = BOPJaenSource(Client())
+    result = source.fetch(FetchContext(date(2026, 10, 6), 0, {}, app_config))
+    assert len(result) == 1
+    assert source.covered_through is None
+    assert "documentos pendientes" in source.coverage_warning

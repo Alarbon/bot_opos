@@ -19,6 +19,7 @@ from .telegram import (
     TelegramClient,
     TelegramError,
     render_event,
+    event_keyboard,
 )
 
 
@@ -345,7 +346,7 @@ def dispatch(
             sleep(min_interval_seconds)
         attempted_any = True
         try:
-            message_id = telegram.send(render_event(event))
+            message_id = telegram.send(render_event(event), reply_markup=event_keyboard(event))
         except TelegramAmbiguousError as exc:
             store.mark_event(
                 event["event_id"], OutboxStatus.UNCERTAIN, error=str(exc)

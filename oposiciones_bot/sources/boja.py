@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from typing import Any
+import requests
 
 from ..enrichment import enrich_candidate
 from ..models import Candidate, SourceLink
@@ -48,26 +49,48 @@ class BOJASource(SourceAdapter):
         candidates: list[Candidate] = []
         seen_ids: set[str] = set()
         page = 0
+        widened = False
         while True:
-            payload = self.client.get_json(self.endpoint, params={**params, "page": page})
-            records = payload.get("results", [])
-            if not isinstance(records, list):
-                break
+            try:
+                payload = self.client.get_json(self.endpoint, params={**params, "page": page})
+            except requests.HTTPError as exc:
+                # The official service returns 400 for an empty date window
+                # (observed 31 Oct–1 Nov 2026). Never interpret *any* 400 as
+                # "no news": obtain and validate a real result set instead.
+                if page != 0 or widened or exc.response is None or exc.response.status_code != 400:
+                    raise
+                params["date_from"] = (start - timedelta(days=7)).isoformat()
+                widened = True
+                continue
+            if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+                raise ValueError("BOJA: esquema de resultados no reconocido")
+            records = payload["results"]
+            total = payload.get("total_hits")
+            if type(total) is not int or total < 0 or (not records and page * page_size < total):
+                raise ValueError("BOJA: paginación incompleta o total inválido")
+            new_ids = 0
             for item in records:
                 if not isinstance(item, dict):
-                    continue
+                    raise ValueError("BOJA: documento no interpretable")
                 item_id = str(item.get("id") or "")
-                if not item_id or item_id in seen_ids:
+                if not item_id:
+                    raise ValueError("BOJA: documento sin identificador")
+                if item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
+                new_ids += 1
 
                 published = parse_date(item.get("dateUTC") or item.get("date"))
+                if not published:
+                    raise ValueError("BOJA: documento sin fecha válida")
                 if published:
                     age = (context.today - date.fromisoformat(published)).days
                     if age < 0 or age > context.lookback_days:
                         continue
                 summary = str(item.get("summaryNoHtml") or item.get("summary") or "")
                 body = str(item.get("bodyNoHtml") or "")
+                if not summary.strip() and not body.strip():
+                    raise ValueError("BOJA: documento sin contenido clasificable")
                 if not self._potentially_relevant(
                     f"{summary} {body} {item.get('organisation', '')}"
                 ):
@@ -80,7 +103,7 @@ class BOJASource(SourceAdapter):
                     (record for record in pdf_records if isinstance(record, dict)),
                     {},
                 )
-                pdf_url = str(pdf.get("publicUrl") or "")
+                pdf_url = str(pdf.get("publicUrl") or item.get("publicUrl") or "")
                 year = str(item.get("year") or (published or "")[:4])
                 number = str(item.get("number") or "")
                 disposition = str(
@@ -122,10 +145,15 @@ class BOJASource(SourceAdapter):
                 )
                 candidates.append(enrich_candidate(candidate))
 
-            total = int(payload.get("total_hits") or 0)
             page += 1
-            if not records or len(records) < page_size or page * page_size >= total:
+            if records and not new_ids:
+                raise ValueError("BOJA: página repetida sin progreso")
+            if page * page_size >= total:
                 break
+            if len(records) < page_size:
+                raise ValueError("BOJA: página truncada antes del total anunciado")
+            if page >= 1000:
+                raise ValueError("BOJA: límite de páginas; consulta incompleta")
         return candidates
 
     @staticmethod

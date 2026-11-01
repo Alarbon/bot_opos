@@ -129,6 +129,7 @@ class BOPJaenSource(SourceAdapter):
 
     def _fetch_current_site(self, context: FetchContext) -> list[Candidate]:
         candidates: list[Candidate] = []
+        failed_documents: list[tuple[date, str]] = []
         for offset in range(context.lookback_days + 1):
             day = context.today - timedelta(days=offset)
             page_url = self.endpoint.format(date=day.strftime("%d-%m-%Y"))
@@ -165,7 +166,10 @@ class BOPJaenSource(SourceAdapter):
                         full_text = pdf_to_text(
                             self._document_bytes(pdf_url, day, edict)
                         )
+                        if not full_text.strip():
+                            raise ValueError("PDF sin texto interpretable")
                     except Exception as exc:
+                        failed_documents.append((day, f"{source_id}: {type(exc).__name__}"))
                         LOGGER.warning("BOP Jaen: no se pudo extraer %s: %s", source_id, exc)
                 candidate = Candidate(
                     source=self.name,
@@ -184,6 +188,11 @@ class BOPJaenSource(SourceAdapter):
                     raw={"bulletin_url": page_url, "edict": edict},
                 )
                 candidates.append(enrich_candidate(candidate))
+        if failed_documents:
+            safe_day = min(day for day, _ in failed_documents) - timedelta(days=1)
+            start = context.today - timedelta(days=context.lookback_days)
+            self.covered_through = safe_day if safe_day >= start else None
+            self.coverage_warning = "BOP de Jaén: documentos pendientes de descarga o extracción: " + "; ".join(note for _, note in failed_documents)[:1200]
         return candidates
 
     def fetch(self, context: FetchContext) -> list[Candidate]:
@@ -232,7 +241,8 @@ class BOPJaenSource(SourceAdapter):
             )
             return archive.candidates
 
-        self.covered_through = context.today
+        if not self.coverage_warning:
+            self.covered_through = context.today
         return candidates
 
     @staticmethod

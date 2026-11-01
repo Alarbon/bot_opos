@@ -67,6 +67,7 @@ def render_report(report: dict) -> str:
         else "⚠️ BÚSQUEDA TERMINADA CON COBERTURA INCOMPLETA" if errors
         else "⚠️ BÚSQUEDA COMPLETADA CON AVISOS DE COBERTURA" if warnings
         else "⚠️ BÚSQUEDA TERMINADA CON AVISOS PENDIENTES" if delivery_problem
+        else "✅ BÚSQUEDA COMPLETADA SIN NOVEDADES" if collection and not collection.get("created") and not collection.get("updated")
         else "✅ BÚSQUEDA COMPLETADA"
     )
     lines = [heading, "Automática" if report["event"] == "schedule" else "Manual", ""]
@@ -133,7 +134,8 @@ def send_report(report: dict) -> None:
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not token or not chat_id:
         raise RuntimeError("Faltan secretos de Telegram para el resumen")
-    payload = json.dumps({"chat_id": chat_id, "text": render_report(report), "parse_mode": "HTML", "disable_web_page_preview": True}).encode()
+    payload = json.dumps({"chat_id": chat_id, "text": render_report(report), "parse_mode": "HTML", "disable_web_page_preview": True,
+                          "reply_markup": {"inline_keyboard": [[{"text": "📋 Convocatorias", "callback_data": "l:a:1"}, {"text": "⭐ Seguimientos", "callback_data": "l:f:1"}], [{"text": "ℹ️ Estado", "callback_data": "m:estado"}]]}}).encode()
     request = Request(f"https://api.telegram.org/bot{token}/sendMessage", data=payload, headers={"Content-Type": "application/json"}, method="POST")
     # No automatic retry: a lost response could otherwise duplicate the message.
     try:

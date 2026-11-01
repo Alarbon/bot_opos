@@ -1,7 +1,63 @@
 {
   "version": 2,
-  "generated_at": "2026-11-01T14:20:21+00:00",
+  "generated_at": "2026-11-01T22:03:26+00:00",
   "processes": [
+    {
+      "source": "iaap",
+      "source_id": "14f8ea07-79b5-4311-8623-a8bab4fc2f49",
+      "title": "C1.2003 Ayudantes técnicos - Opción Informática",
+      "organisation": "Junta de Andalucía — Dirección General de Recursos Humanos y Función Pública",
+      "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/c12003-ayudantes-tecnicos-opcion-informatica",
+      "publication_date": null,
+      "summary": "C1.2003 Ayudantes técnicos - Opción Informática Acceso libre C1.2003 Ayudantes técnicos - Opción Informática 2023 36 3 1 0 Convocatoria plazas adicionales",
+      "reference": "",
+      "official_references": [],
+      "links": [
+        {
+          "source": "iaap",
+          "url": "https://juntadeandalucia.es/eboja/2024/191/BOJA24-191-00031-51272-01_00308221.pdf",
+          "reference": "",
+          "label": "RESOLUCIÓN"
+        },
+        {
+          "source": "iaap",
+          "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/c12003-ayudantes-tecnicos-opcion-informatica",
+          "reference": "",
+          "label": "Fuente oficial"
+        },
+        {
+          "source": "iaap",
+          "url": "https://portalempleopublico.juntadeandalucia.es/sites/default/files/migracion_procesos/unique/Resolucion_DGRRHHYFP_Convocatoria_C1.2_AYTE._TECNIC.pdf",
+          "reference": "",
+          "label": "BOJA nº191 de 1 de octubre de 2024"
+        }
+      ],
+      "locality": "",
+      "province": "",
+      "scope": "Andalucia",
+      "group": "C1",
+      "positions": 40,
+      "access": "LIBRE",
+      "qualification_text": "",
+      "compatibility": "REVISAR",
+      "deadline": null,
+      "deadline_confirmed": false,
+      "status": "NOTAS",
+      "exam_date": null,
+      "exam_time": null,
+      "exam_place": "",
+      "priority": 5,
+      "special_process": "JUNTA_INFORMATICA",
+      "id": "14f8ea07-79b5-4311-8623-a8bab4fc2f49",
+      "aliases": [],
+      "category": "TRACKING",
+      "review_reason": "titulacion compatible no confirmada",
+      "followed": true,
+      "last_seen": "2026-10-21T18:33:38+00:00",
+      "last_changed": "2026-11-01T22:03:26+00:00",
+      "history": [],
+      "exam_date_provisional": null
+    },
     {
       "source": "ayuntamiento_martos",
       "source_id": "0f4efb2d-1c21-4eb0-844d-70dcb9c36e21",
@@ -116,7 +172,8 @@
             "localidad"
           ]
         }
-      ]
+      ],
+      "exam_date_provisional": null
     },
     {
       "source": "diputacion_jaen",
@@ -297,111 +354,8 @@
           "kind": "REVIEW",
           "changes": []
         }
-      ]
-    },
-    {
-      "source": "iaap",
-      "source_id": "14f8ea07-79b5-4311-8623-a8bab4fc2f49",
-      "title": "C1.2003 Ayudantes técnicos - Opción Informática",
-      "organisation": "Iaap",
-      "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/c12003-ayudantes-tecnicos-opcion-informatica",
-      "publication_date": "2026-03-06",
-      "summary": "C1.2003 Ayudantes técnicos - Opción Informática Acceso libre C1.2003 Ayudantes técnicos - Opción Informática 2023 36 3 1 0 Convocatoria plazas adicionales",
-      "reference": "",
-      "official_references": [],
-      "links": [
-        {
-          "source": "iaap",
-          "url": "https://juntadeandalucia.es/eboja/2024/191/BOJA24-191-00031-51272-01_00308221.pdf",
-          "reference": "",
-          "label": "RESOLUCIÓN"
-        },
-        {
-          "source": "iaap",
-          "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/c12003-ayudantes-tecnicos-opcion-informatica",
-          "reference": "",
-          "label": "Fuente oficial"
-        },
-        {
-          "source": "iaap",
-          "url": "https://portalempleopublico.juntadeandalucia.es/sites/default/files/migracion_procesos/unique/Resolucion_DGRRHHYFP_Convocatoria_C1.2_AYTE._TECNIC.pdf",
-          "reference": "",
-          "label": "BOJA nº191 de 1 de octubre de 2024"
-        }
       ],
-      "locality": "",
-      "province": "",
-      "scope": "Andalucia",
-      "group": "C1",
-      "positions": null,
-      "access": "LIBRE",
-      "qualification_text": "",
-      "compatibility": "REVISAR",
-      "deadline": null,
-      "deadline_confirmed": false,
-      "status": "CONVOCADA",
-      "exam_date": null,
-      "exam_time": null,
-      "exam_place": "",
-      "priority": 5,
-      "special_process": "JUNTA_INFORMATICA",
-      "id": "14f8ea07-79b5-4311-8623-a8bab4fc2f49",
-      "aliases": [],
-      "category": "REVIEW",
-      "review_reason": "titulacion compatible no confirmada",
-      "followed": true,
-      "last_seen": "2026-10-21T18:33:38+00:00",
-      "last_changed": "2026-10-06T17:37:07+00:00",
-      "history": []
-    },
-    {
-      "source": "iaap",
-      "source_id": "f65b4f61-c2b3-4ced-b55f-76063e9a9280",
-      "title": "B1.2000 Tecnologías de la Información y Comunicación",
-      "organisation": "Iaap",
-      "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/P2B12000",
-      "publication_date": "2026-06-10",
-      "summary": "B1.2000 Tecnologías de la Información y Comunicación Promoción interna B1.2000 Tecnologías de la Información y Comunicación 2023 19 1 0 0 En plazo de alegación al listado provisional de personas aprobadas",
-      "reference": "",
-      "official_references": [],
-      "links": [
-        {
-          "source": "iaap",
-          "url": "https://juntadeandalucia.es/eboja/2026/109/c01/BOJA26-210901-00032-7774-01_00339009.pdf",
-          "reference": "",
-          "label": "Resolución de 8 de junio de 2026, de la Dirección General de Recursos Humanos y…"
-        },
-        {
-          "source": "iaap",
-          "url": "https://portalempleopublico.juntadeandalucia.es/sede/acceso-tramites/seguimiento-procesos-selectivos/P2B12000",
-          "reference": "",
-          "label": "Fuente oficial"
-        }
-      ],
-      "locality": "",
-      "province": "",
-      "scope": "Andalucia",
-      "group": "B",
-      "positions": 2026,
-      "access": "MIXTO",
-      "qualification_text": "",
-      "compatibility": "REVISAR",
-      "deadline": "2026-06-10",
-      "deadline_confirmed": true,
-      "status": "CONVOCADA",
-      "exam_date": "2026-09-19",
-      "exam_time": null,
-      "exam_place": "",
-      "priority": 5,
-      "special_process": "JUNTA_INFORMATICA",
-      "id": "f65b4f61-c2b3-4ced-b55f-76063e9a9280",
-      "aliases": [],
-      "category": "TRACKING",
-      "review_reason": "titulacion compatible no confirmada",
-      "followed": false,
-      "last_seen": "2026-10-21T18:33:38+00:00",
-      "last_changed": "2026-10-06T17:37:07+00:00",
-      "history": []
+      "exam_date_provisional": null
     }
   ],
   "sources": [

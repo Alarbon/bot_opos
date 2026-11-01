@@ -299,3 +299,31 @@ def test_dispatch_ambiguous_transport_failure_is_uncertain_and_not_retried(
     assert second.sent == 0
     assert accepted.calls == []
     assert store.list_outbox()[0]["status"] == OutboxStatus.UNCERTAIN.value
+
+
+def test_notification_native_buttons_use_full_persistent_id(candidate_factory):
+    from oposiciones_bot.telegram import event_keyboard
+    event = event_for(candidate_factory())
+    payload = json.loads(event["payload_json"])
+    process_id = "abcdef01-1111-2222-3333-444444444444"
+    payload["process_id"] = process_id
+    event["payload_json"] = json.dumps(payload)
+    markup = event_keyboard(event)
+    buttons = [button for row in markup["inline_keyboard"] for button in row]
+    assert buttons[0]["callback_data"] == f"d:{process_id}:a:1"
+    assert buttons[-1]["copy_text"]["text"] == f"/detalle {process_id}"
+    assert all(1 <= len(b["callback_data"].encode()) <= 64 for b in buttons if "callback_data" in b)
+    session = FakeSession(response=FakeResponse(200, {"ok": True, "result": {"message_id": 123}}))
+    client = TelegramClient(TelegramSettings("test", "1"), session)
+    assert client.send("test", reply_markup=markup) == "123"
+    assert session.calls[0]["json"]["reply_markup"] == markup
+
+
+def test_provisional_exam_survives_sqlite_and_catalog(store, candidate_factory, included_decision, app_config):
+    from oposiciones_bot.catalog import build_catalog
+    from datetime import date
+    candidate = candidate_factory(exam_date="2026-11-10", raw={"exam_date_provisional": True})
+    store.ingest(candidate, included_decision, notify=False)
+    data = build_catalog(store, app_config, date(2026, 11, 1))
+    assert data["processes"][0]["exam_date_provisional"] is True
+    assert store.connection.execute("SELECT snapshot_json FROM processes").fetchone()[0].find('"exam_date_provisional":true') >= 0
