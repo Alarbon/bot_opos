@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-10-31T19:56:50+00:00",
+  "generated_at": "2026-11-01T14:20:18+00:00",
   "processes": [
     {
       "source": "ayuntamiento_martos",
@@ -106,7 +106,7 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-10-31T13:42:26+00:00",
+      "last_seen": "2026-11-01T14:20:00+00:00",
       "last_changed": "2026-10-06T19:10:02+00:00",
       "history": [
         {
@@ -407,63 +407,63 @@
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-10-31T13:42:28+00:00",
+      "started_at": "2026-11-01T14:20:03+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-10-31T13:41:54+00:00",
+      "started_at": "2026-11-01T14:19:26+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-10-31T13:42:26+00:00",
+      "started_at": "2026-11-01T14:20:00+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     },
     {
       "source": "boe",
-      "started_at": "2026-10-31T13:39:54+00:00",
+      "started_at": "2026-11-01T14:17:27+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     },
     {
       "source": "boja",
-      "started_at": "2026-10-31T13:39:55+00:00",
-      "status": "OK",
-      "items_found": 4,
-      "error": "",
+      "started_at": "2026-11-01T14:17:29+00:00",
+      "status": "ERROR",
+      "items_found": 0,
+      "error": "HTTPError: 400 Client Error: Bad Request for url: https://datos.juntadeandalucia.es/api/v0/boja/get/search_pagination?order_by=dateUTC&mode=DESC&size=100&date_from=2026-10-31&date_to=2026-11-01&campos=id&campos=number&campos=date&campos=dateUTC&campos=titleSec&campos=organisation&campos=year&campos=type&campos=dispositionNumber&campos=sectionN2&campos=summaryNoHtml&campos=bodyNoHtml&campos=id_file&campos=pathPdf&campos=hashPdf&campos=publicUrl&page=0",
       "last_covered_through": "2026-10-31"
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-10-31T13:40:03+00:00",
+      "started_at": "2026-11-01T14:17:36+00:00",
       "status": "PARTIAL",
       "items_found": 0,
-      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-10-31 pendiente de indexación",
+      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-01 pendiente de indexación",
       "last_covered_through": "2026-10-30"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-10-31T13:42:39+00:00",
+      "started_at": "2026-11-01T14:20:14+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     },
     {
       "source": "iaap",
-      "started_at": "2026-10-31T13:40:08+00:00",
+      "started_at": "2026-11-01T14:17:40+00:00",
       "status": "PARTIAL",
       "items_found": 0,
       "error": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
@@ -471,19 +471,19 @@
     },
     {
       "source": "sas",
-      "started_at": "2026-10-31T13:39:47+00:00",
+      "started_at": "2026-11-01T14:17:04+00:00",
       "status": "OK",
       "items_found": 1,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     },
     {
       "source": "universidad_jaen",
-      "started_at": "2026-10-31T13:42:40+00:00",
+      "started_at": "2026-11-01T14:20:15+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
-      "last_covered_through": "2026-10-31"
+      "last_covered_through": "2026-11-01"
     }
   ]
 }
