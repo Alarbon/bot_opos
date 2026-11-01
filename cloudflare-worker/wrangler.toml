@@ -1,6 +1,8 @@
 name = "oposiciones-telegram"
 main = "src/index.js"
 compatibility_date = "2026-10-06"
+# Keep temporary diagnostic versions unreachable after deployment validation.
+preview_urls = false
 
 [vars]
 GITHUB_OWNER = "Alarbon"

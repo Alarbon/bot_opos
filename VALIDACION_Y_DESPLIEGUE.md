@@ -488,3 +488,41 @@ Después de cualquier recuperación: salud, catálogo/IDs y comandos de lectura 
 ### Conclusión
 
 **APTO PARA DESPLIEGUE CONTROLADO**, con pausa y drenaje efectivos, nuevo respaldo fijado a commit, conservación e idempotencia aprobadas, Worker previo recuperable y autorización existente correcta. La preparación está ensayada sobre una copia reciente real; todavía no están verificados el Worker efectivo, permisos/secretos desplegados, configuración de Telegram ni la entrega y confirmación reales. Si cualquiera de esas puertas falla, el procedimiento se detiene sin habilitar la búsqueda. No es una autorización para desplegar automáticamente ni una garantía de cobertura completa de las fuentes.
+
+## Publicación realizada — 01/11/2026
+
+Este apartado sustituye las restricciones de publicación de las secciones anteriores:
+el propietario autorizó expresamente commit, push, Worker, webhook y pruebas reales.
+
+- Integración en clon limpio desde `9f53cba123ba5c4e72bd2d96a735f218075e693f`.
+  Código, reparación desde producción y catálogo publicados en `ec3f268` (29 archivos).
+  Carpeta original e imagen personal intactas.
+- Pausa/drenaje y respaldo externos. Reparación idempotente; 296 tests Python y
+  56 tests Worker correctos. SQLite esquema 6 íntegra, sin errores de relaciones.
+- Worker nuevo desplegado antes de publicar Python. Cuenta y secretos existentes
+  reutilizados dentro de Cloudflare, sin extraer valores ni rotarlos. No hay Git
+  conectado a Workers Builds. Las versiones privadas de diagnóstico no recibieron
+  tráfico de producción; las URL de versiones se deshabilitan al cerrar la validación.
+- Webhook existente comprobado: solo admitía message/edited_message. Se amplió con
+  el configurador existente a message/callback_query, misma URL y secreto, sin
+  descartar actualizaciones. Cero pendientes y sin errores nuevos observados.
+- Pruebas reales de comandos de lectura con el mismo módulo desplegado y secretos
+  heredados en Cloudflare: start, ayuda, estado, convocatorias, detalle y seguimientos.
+  Bot API confirmó entregas y teclados. No crearon runs. IDs/copia de comando validados.
+  Petición real sin secreto al webhook: 403.
+- Seguimiento: operación idempotente sobre el seguimiento existente; alta y baja
+  secuenciales sobre Martos confirmadas por workflows y Telegram. Estado original
+  restaurado: un seguimiento, 17 alias, 24 convocatorias y dos filas de outbox.
+- Única búsqueda real: run `41356127823`, success; recogida, publicación y recibos
+  correctos. Cero novedades y envíos individuales; resumen enviado. Resultado de
+  fuentes PARTIAL: 7 OK, 3 PARTIAL, 0 ERROR. BOJA OK; BOP hasta 30/10, IAAP
+  ConnectTimeout y tres PDF de Martos pendientes. Checkpoints parciales sin avance.
+- Base final de esa ejecución en `81594153749e5f8c64369d7b98895225761fd85b`:
+  integridad/relaciones correctas, UUID originales, alias, seguimiento y outbox
+  conservados; cero SENDING/UNCERTAIN. latest_run corresponde al run indicado.
+- Pendiente manual: pulsación física de botones/callback de Telegram, abrir fuente
+  oficial en el cliente y copiar al portapapeles. Paginación con más de cinco fichas
+  solo probada localmente: producción tiene tres. No se afirma prueba física completa.
+- Horario previo conservado: búsqueda diaria prevista a las 08:17 Europe/Madrid;
+  ambos workflows se restauran al estado activo original al terminar.
+- Worker final: `204f2ca6-4f8c-4718-9baf-90abf9f37036`, al 100%; salud ok. URL de diagnóstico deshabilitada.
