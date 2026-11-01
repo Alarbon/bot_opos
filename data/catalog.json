@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-11-01T22:18:00+00:00",
+  "generated_at": "2026-11-01T22:54:52+00:00",
   "processes": [
     {
       "source": "iaap",
@@ -52,7 +52,7 @@
       "aliases": [],
       "category": "TRACKING",
       "review_reason": "titulacion compatible no confirmada",
-      "followed": true,
+      "followed": false,
       "last_seen": "2026-10-21T18:33:38+00:00",
       "last_changed": "2026-11-01T22:03:26+00:00",
       "history": [],
