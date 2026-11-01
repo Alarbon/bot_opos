@@ -1,22 +1,24 @@
 {
-  "run_id": "41206545866",
+  "run_id": "41315381786",
   "event": "schedule",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41206545866",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41315381786",
   "status": "success",
-  "finished_at": "2026-10-31T13:42:48.128628+00:00",
-  "started_at": "2026-10-31T14:39:47.209347+01:00",
+  "finished_at": "2026-11-01T14:20:23.198343+00:00",
+  "started_at": "2026-11-01T15:17:04.444756+01:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 9,
+    "fetched": 5,
     "included": 1,
     "created": 0,
     "updated": 0,
     "unchanged": 1,
-    "filtered": 8,
+    "filtered": 4,
     "reminders": 0,
-    "errors": {},
+    "errors": {
+      "boja": "HTTPError: 400 Client Error: Bad Request for url: https://datos.juntadeandalucia.es/api/v0/boja/get/search_pagination?order_by=dateUTC&mode=DESC&size=100&date_from=2026-10-31&date_to=2026-11-01&campos=id&campos=number&campos=date&campos=dateUTC&campos=titleSec&campos=organisation&campos=year&campos=type&campos=dispositionNumber&campos=sectionN2&campos=summaryNoHtml&campos=bodyNoHtml&campos=id_file&campos=pathPdf&campos=hashPdf&campos=publicUrl&page=0"
+    },
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-10-31 pendiente de indexación",
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-01 pendiente de indexación",
       "iaap": "iaap: 1 de 2 listado(s) sin consultar o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout"
     },
     "compatible": 0,
@@ -25,51 +27,50 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 176.1,
+    "duration_seconds": 193.6,
     "sources": {
       "sas": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 1,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 6.8
+        "duration_seconds": 22.8
       },
       "boe": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 1.6
+        "duration_seconds": 2.5
       },
       "boja": {
-        "window_start": "2026-10-30",
-        "found": 4,
+        "window_start": "2026-10-31",
+        "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
-        "status": "OK",
-        "covered_through": "2026-10-31",
-        "detail": "",
-        "duration_seconds": 8.2
+        "status": "ERROR",
+        "detail": "HTTPError: 400 Client Error: Bad Request for url: https://datos.juntadeandalucia.es/api/v0/boja/get/search_pagination?order_by=dateUTC&mode=DESC&size=100&date_from=2026-10-31&date_to=2026-11-01&campos=id&campos=number&campos=date&campos=dateUTC&campos=titleSec&campos=organisation&campos=year&campos=type&campos=dispositionNumber&campos=sectionN2&campos=summaryNoHtml&campos=bodyNoHtml&campos=id_file&campos=pathPdf&campos=hashPdf&campos=publicUrl&page=0",
+        "duration_seconds": 6.4
       },
       "bop_jaen": {
-        "window_start": "2026-10-29",
+        "window_start": "2026-10-30",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "PARTIAL",
         "covered_through": "2026-10-30",
-        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-10-31 pendiente de indexación",
-        "duration_seconds": 5.0
+        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-01 pendiente de indexación",
+        "duration_seconds": 4.3
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -83,59 +84,59 @@
         "duration_seconds": 105.8
       },
       "ayuntamiento_martos": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 2,
         "included": 1,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 31.7
+        "duration_seconds": 34.6
       },
       "ayuntamiento_torredelcampo": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 2.1
+        "duration_seconds": 2.6
       },
       "ayuntamiento_jaen": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 10.8
+        "duration_seconds": 10.9
       },
       "diputacion_jaen": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 1.4
+        "duration_seconds": 1.7
       },
       "universidad_jaen": {
-        "window_start": "2026-10-30",
+        "window_start": "2026-10-31",
         "found": 2,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-10-31",
+        "covered_through": "2026-11-01",
         "detail": "",
-        "duration_seconds": 2.7
+        "duration_seconds": 2.2
       }
     },
     "outcome": "PARTIAL"
