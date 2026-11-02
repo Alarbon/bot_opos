@@ -1,10 +1,10 @@
 {
-  "run_id": "41489079311",
+  "run_id": "41503415529",
   "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41489079311",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41503415529",
   "status": "success",
-  "finished_at": "2026-11-02T17:16:58.256379+00:00",
-  "started_at": "2026-11-02T18:13:43.064397+01:00",
+  "finished_at": "2026-11-02T18:48:11.855117+00:00",
+  "started_at": "2026-11-02T19:44:56.196859+01:00",
   "collection": {
     "sources_attempted": 10,
     "fetched": 5,
@@ -26,7 +26,7 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 190.7,
+    "duration_seconds": 190.5,
     "sources": {
       "sas": {
         "window_start": "2026-11-02",
@@ -37,7 +37,7 @@
         "status": "OK",
         "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 12.8
+        "duration_seconds": 6.0
       },
       "boe": {
         "window_start": "2026-11-02",
@@ -48,7 +48,7 @@
         "status": "OK",
         "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 0.9
+        "duration_seconds": 1.0
       },
       "boja": {
         "window_start": "2026-11-02",
@@ -59,7 +59,7 @@
         "status": "OK",
         "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 17.6
+        "duration_seconds": 14.2
       },
       "bop_jaen": {
         "window_start": "2026-10-30",
@@ -70,7 +70,7 @@
         "status": "PARTIAL",
         "covered_through": "2026-10-30",
         "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-02 pendiente de indexación",
-        "duration_seconds": 4.0
+        "duration_seconds": 15.0
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -81,7 +81,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
-        "duration_seconds": 105.2
+        "duration_seconds": 107.4
       },
       "ayuntamiento_martos": {
         "window_start": "2026-11-01",
@@ -92,7 +92,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-pl",
-        "duration_seconds": 32.9
+        "duration_seconds": 31.3
       },
       "ayuntamiento_torredelcampo": {
         "window_start": "2026-11-02",
@@ -114,7 +114,7 @@
         "status": "OK",
         "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 11.7
+        "duration_seconds": 10.4
       },
       "diputacion_jaen": {
         "window_start": "2026-11-02",
@@ -136,7 +136,7 @@
         "status": "OK",
         "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 2.0
+        "duration_seconds": 1.5
       }
     },
     "outcome": "PARTIAL"
