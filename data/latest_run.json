@@ -1,10 +1,10 @@
 {
-  "run_id": "41356127823",
-  "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41356127823",
+  "run_id": "41488384847",
+  "event": "schedule",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/41488384847",
   "status": "success",
-  "finished_at": "2026-11-01T22:18:01.915252+00:00",
-  "started_at": "2026-11-01T23:14:55.362654+01:00",
+  "finished_at": "2026-11-02T17:12:53.921128+00:00",
+  "started_at": "2026-11-02T18:09:44.531490+01:00",
   "collection": {
     "sources_attempted": 10,
     "fetched": 5,
@@ -16,7 +16,7 @@
     "reminders": 0,
     "errors": {},
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-01 pendiente de indexación",
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-02 pendiente de indexación",
       "iaap": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
       "ayuntamiento_martos": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48380/acta-del-tribunal-calificador-del-proceso-selectivo-para-la-provision-mediante-oposicion-libre-de-una-plaza-de-ingeniero-a-informatico-a-celebrada-el-dia-17-de-julio-de-2026-relativa-a-la-lectura.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48303/acta-del-tribunal-de-seleccion-fase-de-oposicion-de-una-plaza-de-ingeniero-a-informatico-a-de-fecha-14-de-julio-de-2026-por-el-sistema-de-oposicion-libre-y-fecha-para-la-lectura-del-ejercicio.pdf (ValueError)"
     },
@@ -26,7 +26,7 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 182.0,
+    "duration_seconds": 184.2,
     "sources": {
       "sas": {
         "window_start": "2026-11-01",
@@ -35,9 +35,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 7.3
+        "duration_seconds": 6.2
       },
       "boe": {
         "window_start": "2026-11-01",
@@ -46,20 +46,20 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 0.6
+        "duration_seconds": 1.2
       },
       "boja": {
-        "window_start": "2026-10-31",
+        "window_start": "2026-11-01",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 14.1
+        "duration_seconds": 16.2
       },
       "bop_jaen": {
         "window_start": "2026-10-30",
@@ -69,8 +69,8 @@
         "updated": 0,
         "status": "PARTIAL",
         "covered_through": "2026-10-30",
-        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-01 pendiente de indexación",
-        "duration_seconds": 4.5
+        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-02 pendiente de indexación",
+        "duration_seconds": 5.0
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -81,7 +81,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
-        "duration_seconds": 105.6
+        "duration_seconds": 105.5
       },
       "ayuntamiento_martos": {
         "window_start": "2026-11-01",
@@ -101,9 +101,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 2.2
+        "duration_seconds": 2.1
       },
       "ayuntamiento_jaen": {
         "window_start": "2026-11-01",
@@ -112,7 +112,7 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
         "duration_seconds": 11.3
       },
@@ -123,7 +123,7 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
         "duration_seconds": 1.5
       },
@@ -134,9 +134,9 @@
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-01",
+        "covered_through": "2026-11-02",
         "detail": "",
-        "duration_seconds": 1.5
+        "duration_seconds": 1.7
       }
     },
     "outcome": "PARTIAL"
