@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-11-02T18:48:10+00:00",
+  "generated_at": "2026-11-03T15:19:07+00:00",
   "processes": [
     {
       "source": "iaap",
@@ -162,7 +162,7 @@
       "category": "TRACKING",
       "review_reason": "grupo no permitido o no confirmado (solo B/C1); titulacion compatible no confirmada",
       "followed": false,
-      "last_seen": "2026-11-02T18:47:51+00:00",
+      "last_seen": "2026-11-03T15:18:48+00:00",
       "last_changed": "2026-10-06T19:10:02+00:00",
       "history": [
         {
@@ -361,15 +361,15 @@
   "sources": [
     {
       "source": "ayuntamiento_jaen",
-      "started_at": "2026-11-02T18:47:53+00:00",
+      "started_at": "2026-11-03T15:18:50+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     },
     {
       "source": "ayuntamiento_martos",
-      "started_at": "2026-11-02T18:47:19+00:00",
+      "started_at": "2026-11-03T15:18:18+00:00",
       "status": "PARTIAL",
       "items_found": 2,
       "error": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48380/acta-del-tribunal-calificador-del-proceso-selectivo-para-la-provision-mediante-oposicion-libre-de-una-plaza-de-ingeniero-a-informatico-a-celebrada-el-dia-17-de-julio-de-2026-relativa-a-la-lectura.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48303/acta-del-tribunal-de-seleccion-fase-de-oposicion-de-una-plaza-de-ingeniero-a-informatico-a-de-fecha-14-de-julio-de-2026-por-el-sistema-de-oposicion-libre-y-fecha-para-la-lectura-del-ejercicio.pdf (ValueError)",
@@ -377,47 +377,47 @@
     },
     {
       "source": "ayuntamiento_torredelcampo",
-      "started_at": "2026-11-02T18:47:51+00:00",
+      "started_at": "2026-11-03T15:18:48+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     },
     {
       "source": "boe",
-      "started_at": "2026-11-02T18:45:02+00:00",
+      "started_at": "2026-11-03T15:16:14+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     },
     {
       "source": "boja",
-      "started_at": "2026-11-02T18:45:03+00:00",
+      "started_at": "2026-11-03T15:16:15+00:00",
       "status": "OK",
-      "items_found": 0,
+      "items_found": 10,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     },
     {
       "source": "bop_jaen",
-      "started_at": "2026-11-02T18:45:17+00:00",
+      "started_at": "2026-11-03T15:16:29+00:00",
       "status": "PARTIAL",
       "items_found": 0,
-      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-02 pendiente de indexación",
+      "error": "BOP de Jaén: archivo oficial disponible hasta 2026-10-30; 2026-11-03 pendiente de indexación",
       "last_covered_through": "2026-10-30"
     },
     {
       "source": "diputacion_jaen",
-      "started_at": "2026-11-02T18:48:03+00:00",
+      "started_at": "2026-11-03T15:19:03+00:00",
       "status": "OK",
       "items_found": 0,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     },
     {
       "source": "iaap",
-      "started_at": "2026-11-02T18:45:32+00:00",
+      "started_at": "2026-11-03T15:16:33+00:00",
       "status": "PARTIAL",
       "items_found": 0,
       "error": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
@@ -425,19 +425,19 @@
     },
     {
       "source": "sas",
-      "started_at": "2026-11-02T18:44:56+00:00",
+      "started_at": "2026-11-03T15:16:03+00:00",
       "status": "OK",
       "items_found": 1,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     },
     {
       "source": "universidad_jaen",
-      "started_at": "2026-11-02T18:48:05+00:00",
+      "started_at": "2026-11-03T15:19:04+00:00",
       "status": "OK",
       "items_found": 2,
       "error": "",
-      "last_covered_through": "2026-11-02"
+      "last_covered_through": "2026-11-03"
     }
   ]
 }
