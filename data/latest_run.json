@@ -1,22 +1,22 @@
 {
-  "run_id": "43726385739",
+  "run_id": "43914843118",
   "event": "schedule",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/43726385739",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/43914843118",
   "status": "success",
-  "finished_at": "2026-11-15T14:52:27.423460+00:00",
-  "started_at": "2026-11-15T15:49:13.278840+01:00",
+  "finished_at": "2026-11-16T17:09:58.531412+00:00",
+  "started_at": "2026-11-16T18:07:01.077970+01:00",
   "collection": {
     "sources_attempted": 10,
-    "fetched": 5,
+    "fetched": 8,
     "included": 1,
     "created": 0,
     "updated": 0,
     "unchanged": 1,
-    "filtered": 4,
+    "filtered": 7,
     "reminders": 0,
     "errors": {},
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-11-13; 2026-11-15 pendiente de indexación",
+      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-11-13; 2026-11-16 pendiente de indexación",
       "iaap": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
       "ayuntamiento_martos": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48380/acta-del-tribunal-calificador-del-proceso-selectivo-para-la-provision-mediante-oposicion-libre-de-una-plaza-de-ingeniero-a-informatico-a-celebrada-el-dia-17-de-julio-de-2026-relativa-a-la-lectura.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48303/acta-del-tribunal-de-seleccion-fase-de-oposicion-de-una-plaza-de-ingeniero-a-informatico-a-de-fecha-14-de-julio-de-2026-por-el-sistema-de-oposicion-libre-y-fecha-para-la-lectura-del-ejercicio.pdf (ValueError)"
     },
@@ -26,40 +26,40 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 189.0,
+    "duration_seconds": 172.9,
     "sources": {
       "sas": {
-        "window_start": "2026-11-14",
+        "window_start": "2026-11-15",
         "found": 1,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 13.7
+        "duration_seconds": 5.8
       },
       "boe": {
-        "window_start": "2026-11-14",
+        "window_start": "2026-11-15",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 2.0
+        "duration_seconds": 1.2
       },
       "boja": {
-        "window_start": "2026-11-14",
-        "found": 0,
+        "window_start": "2026-11-15",
+        "found": 3,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 12.9
+        "duration_seconds": 7.4
       },
       "bop_jaen": {
         "window_start": "2026-11-13",
@@ -69,8 +69,8 @@
         "updated": 0,
         "status": "PARTIAL",
         "covered_through": "2026-11-13",
-        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-11-13; 2026-11-15 pendiente de indexación",
-        "duration_seconds": 4.7
+        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-11-13; 2026-11-16 pendiente de indexación",
+        "duration_seconds": 4.8
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -81,7 +81,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
-        "duration_seconds": 105.5
+        "duration_seconds": 105.1
       },
       "ayuntamiento_martos": {
         "window_start": "2026-11-01",
@@ -92,51 +92,51 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-pl",
-        "duration_seconds": 32.4
+        "duration_seconds": 31.4
       },
       "ayuntamiento_torredelcampo": {
-        "window_start": "2026-11-14",
+        "window_start": "2026-11-15",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 2.4
+        "duration_seconds": 2.1
       },
       "ayuntamiento_jaen": {
-        "window_start": "2026-11-14",
+        "window_start": "2026-11-15",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 11.9
+        "duration_seconds": 11.5
       },
       "diputacion_jaen": {
-        "window_start": "2026-11-14",
+        "window_start": "2026-11-15",
         "found": 0,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 1.8
+        "duration_seconds": 1.5
       },
       "universidad_jaen": {
-        "window_start": "2026-11-14",
+        "window_start": "2026-11-15",
         "found": 2,
         "included": 0,
         "created": 0,
         "updated": 0,
         "status": "OK",
-        "covered_through": "2026-11-15",
+        "covered_through": "2026-11-16",
         "detail": "",
-        "duration_seconds": 1.8
+        "duration_seconds": 1.9
       }
     },
     "outcome": "PARTIAL"
