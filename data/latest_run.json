@@ -1,10 +1,10 @@
 {
-  "run_id": "45774416567",
-  "event": "workflow_dispatch",
-  "url": "https://github.com/Alarbon/bot_opos/actions/runs/45774416567",
+  "run_id": "45870494469",
+  "event": "schedule",
+  "url": "https://github.com/Alarbon/bot_opos/actions/runs/45870494469",
   "status": "success",
-  "finished_at": "2026-11-26T07:23:52.681375+00:00",
-  "started_at": "2026-11-26T08:19:46.954081+01:00",
+  "finished_at": "2026-11-26T17:54:33.641434+00:00",
+  "started_at": "2026-11-26T18:46:30.327553+01:00",
   "collection": {
     "sources_attempted": 10,
     "fetched": 12,
@@ -15,10 +15,11 @@
     "filtered": 11,
     "reminders": 0,
     "errors": {
-      "iaap": "ConnectionError: HTTPSConnectionPool(host='www.juntadeandalucia.es', port=443): Max retries exceeded with url: /organismos/iaap/servicios/anuncios.html?f%5B0%5D=areas_de_actividad_iaap%3A2317 (Caused by ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))"
+      "bop_jaen": "ConnectionError: HTTPSConnectionPool(host='bophistorico.dipujaen.es', port=443): Max retries exceeded with url: /results.vm?c=1&f=&l=100&lang=es&o=&p=0&s=0&t=-creation&view=boletin&d=creation&d=2026&d=11&d=24&d=2026&d=11&d=26 (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='bophistorico.dipujaen.es', port=443): Read timed out. (read timeout=25)\"))",
+      "diputacion_jaen": "ConnectionError: HTTPSConnectionPool(host='sede.dipujaen.es', port=443): Max retries exceeded with url: /api/tablon/getall (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='sede.dipujaen.es', port=443): Read timed out. (read timeout=25)\"))"
     },
     "warnings": {
-      "bop_jaen": "BOP de Jaén: archivo oficial disponible hasta 2026-11-24; 2026-11-26 pendiente de indexación",
+      "iaap": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
       "ayuntamiento_martos": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48380/acta-del-tribunal-calificador-del-proceso-selectivo-para-la-provision-mediante-oposicion-libre-de-una-plaza-de-ingeniero-a-informatico-a-celebrada-el-dia-17-de-julio-de-2026-relativa-a-la-lectura.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48303/acta-del-tribunal-de-seleccion-fase-de-oposicion-de-una-plaza-de-ingeniero-a-informatico-a-de-fecha-14-de-julio-de-2026-por-el-sistema-de-oposicion-libre-y-fecha-para-la-lectura-del-ejercicio.pdf (ValueError)"
     },
     "compatible": 0,
@@ -27,7 +28,7 @@
     "notified_new": 0,
     "silent_new": 0,
     "pending_notifications": 0,
-    "duration_seconds": 240.5,
+    "duration_seconds": 478.3,
     "sources": {
       "sas": {
         "window_start": "2026-11-26",
@@ -38,7 +39,7 @@
         "status": "OK",
         "covered_through": "2026-11-26",
         "detail": "",
-        "duration_seconds": 15.3
+        "duration_seconds": 6.5
       },
       "boe": {
         "window_start": "2026-11-26",
@@ -49,7 +50,7 @@
         "status": "OK",
         "covered_through": "2026-11-26",
         "detail": "",
-        "duration_seconds": 1.7
+        "duration_seconds": 1.0
       },
       "boja": {
         "window_start": "2026-11-26",
@@ -60,7 +61,7 @@
         "status": "OK",
         "covered_through": "2026-11-26",
         "detail": "",
-        "duration_seconds": 3.1
+        "duration_seconds": 9.4
       },
       "bop_jaen": {
         "window_start": "2026-11-24",
@@ -68,10 +69,9 @@
         "included": 0,
         "created": 0,
         "updated": 0,
-        "status": "PARTIAL",
-        "covered_through": "2026-11-24",
-        "detail": "BOP de Jaén: archivo oficial disponible hasta 2026-11-24; 2026-11-26 pendiente de indexación",
-        "duration_seconds": 5.6
+        "status": "ERROR",
+        "detail": "ConnectionError: HTTPSConnectionPool(host='bophistorico.dipujaen.es', port=443): Max retries exceeded with url: /results.vm?c=1&f=&l=100&lang=es&o=&p=0&s=0&t=-creation&view=boletin&d=creation&d=2026&d=11&d=24&d=2026&d=11&d=26 (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='bophistorico.dipujaen.es', port=443): Read timed out. (read timeout=25)\"))",
+        "duration_seconds": 208.4
       },
       "iaap": {
         "window_start": "2026-10-30",
@@ -79,9 +79,10 @@
         "included": 0,
         "created": 0,
         "updated": 0,
-        "status": "ERROR",
-        "detail": "ConnectionError: HTTPSConnectionPool(host='www.juntadeandalucia.es', port=443): Max retries exceeded with url: /organismos/iaap/servicios/anuncios.html?f%5B0%5D=areas_de_actividad_iaap%3A2317 (Caused by ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))",
-        "duration_seconds": 163.0
+        "status": "PARTIAL",
+        "covered_through": null,
+        "detail": "iaap: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: portalempleopublico.juntadeandalucia.es: ConnectTimeout",
+        "duration_seconds": 104.7
       },
       "ayuntamiento_martos": {
         "window_start": "2026-11-01",
@@ -92,7 +93,7 @@
         "status": "PARTIAL",
         "covered_through": null,
         "detail": "ayuntamiento_martos: procesamiento parcial; listados o documentos pendientes o con formato no reconocido: PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-plaza-de-ingeniero-a-informatico-a/48532/acta-del-tribunal-de-seleccion-de-la-fase-de-oposicion-supuesto-practico-de-una-plaza-de-ingeniero-de-informatica-de-fecha-23-de-julio-de-2026-vacante-en-la-plantilla-de-personal-funcionario-del-e.pdf (ValueError); PDF pendiente: https://martos.es/download/1254/convocatoria-bases-1-pl",
-        "duration_seconds": 34.6
+        "duration_seconds": 27.8
       },
       "ayuntamiento_torredelcampo": {
         "window_start": "2026-11-26",
@@ -103,7 +104,7 @@
         "status": "OK",
         "covered_through": "2026-11-26",
         "detail": "",
-        "duration_seconds": 1.7
+        "duration_seconds": 2.4
       },
       "ayuntamiento_jaen": {
         "window_start": "2026-11-26",
@@ -114,7 +115,7 @@
         "status": "OK",
         "covered_through": "2026-11-26",
         "detail": "",
-        "duration_seconds": 11.5
+        "duration_seconds": 12.3
       },
       "diputacion_jaen": {
         "window_start": "2026-11-26",
@@ -122,10 +123,9 @@
         "included": 0,
         "created": 0,
         "updated": 0,
-        "status": "OK",
-        "covered_through": "2026-11-26",
-        "detail": "",
-        "duration_seconds": 2.5
+        "status": "ERROR",
+        "detail": "ConnectionError: HTTPSConnectionPool(host='sede.dipujaen.es', port=443): Max retries exceeded with url: /api/tablon/getall (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='sede.dipujaen.es', port=443): Read timed out. (read timeout=25)\"))",
+        "duration_seconds": 104.5
       },
       "universidad_jaen": {
         "window_start": "2026-11-26",
@@ -136,7 +136,7 @@
         "status": "OK",
         "covered_through": "2026-11-26",
         "detail": "",
-        "duration_seconds": 1.6
+        "duration_seconds": 1.4
       }
     },
     "outcome": "PARTIAL"
